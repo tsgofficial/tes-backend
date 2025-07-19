@@ -1,114 +1,40 @@
 const express = require('express');
-const authRoute = require('./auth.route');
-const kindersRoute = require('./kinders.route');
-const listRoute = require('./list.route');
-const userRoute = require('./user.route');
-const seminarRoute = require('./seminar.route');
-const reportRoutes = require('./report.route');
-const pictureRoutes = require('./picture.route');
-const planRoutes = require('./plan.route');
-const healthRoutes = require('./health.route');
-const contentRoutes = require('./content.route');
-const attendanceRoutes = require('./attendance.route');
-const accountRoutes = require('./account.route');
-const foodRoutes = require('./food.route');
-const surveyRoutes = require('./survey.route');
-const routineRoutes = require('./routine.route');
-const seminarTypeRoutes = require('./seminarType.route');
-const roleRoutes = require('./role.route');
-const paymentRoutes = require('./payment.route');
-const notificationRoutes = require('./notification.route');
+const trucks = require('./truck.route');
+const drivers = require('./driver.route');
+const volumes = require('./volume.route');
+const deliveries = require('./delivery.route');
+const fuelLocations = require('./fuel_location.route');
 
 const router = express.Router();
 
 const defaultRoutes = [
   {
-    path: '/auth',
-    route: authRoute,
+    path: '/trucks',
+    route: trucks,
   },
   {
-    path: '/kinders',
-    route: kindersRoute,
+    path: '/volumes',
+    route: volumes,
   },
   {
-    path: '/list',
-    route: listRoute,
+    path: '/drivers',
+    route: drivers,
   },
   {
-    path: '/user',
-    route: userRoute,
+    path: '/fuel-locations',
+    route: fuelLocations,
   },
   {
-    path: '/seminar',
-    route: seminarRoute,
-  },
-  // {
-  //   path: '/content',
-  //   route: contentRoute,
-  // },
-  {
-    path: '/report',
-    route: reportRoutes,
-  },
-  {
-    path: '/picture',
-    route: pictureRoutes,
-  },
-  {
-    path: '/plan',
-    route: planRoutes,
-  },
-  {
-    path: '/health',
-    route: healthRoutes,
-  },
-  {
-    path: '/content',
-    route: contentRoutes,
-  },
-  {
-    path: '/attendance',
-    route: attendanceRoutes,
-  },
-  {
-    path: '/account',
-    route: accountRoutes,
-  },
-  {
-    path: '/food',
-    route: foodRoutes,
-  },
-  {
-    path: '/survey',
-    route: surveyRoutes,
-  },
-  {
-    path: '/routine',
-    route: routineRoutes,
-  },
-  {
-    path: '/seminar-type',
-    route: seminarTypeRoutes,
-  },
-  {
-    path: '/role',
-    route: roleRoutes,
-  },
-  {
-    path: '/payment',
-    route: paymentRoutes,
-  },
-  {
-    path: '/notification',
-    route: notificationRoutes,
+    path: '/deliveries',
+    route: deliveries,
   },
 ];
 
 // const devRoutes = [
-//   {
-//     path: '/docs',
-//     route: docsRoute,
-//   },
+// {
+//   path: '/docs',
+//   route: docsRoute,
+// },
 // ];
 
 defaultRoutes.forEach((route) => {
