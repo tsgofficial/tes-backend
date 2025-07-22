@@ -16,8 +16,12 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      volume_id: {
+      container_id: {
         type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      delivery_type: {
+        type: DataTypes.ENUM('refueling', 'draining'),
         allowNull: true,
       },
     },
@@ -45,9 +49,9 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'fuel_type_id',
       as: 'fuelType',
     });
-    FuelLogs.belongsTo(models.volumes, {
-      foreignKey: 'volume_id',
-      as: 'volume',
+    FuelLogs.belongsTo(models.containers, {
+      foreignKey: 'container_id',
+      as: 'container',
     });
   };
 

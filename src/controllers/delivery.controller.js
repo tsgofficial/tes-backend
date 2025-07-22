@@ -72,7 +72,7 @@ const createDelivery = catchAsync(async (req, res) => {
     FuelLogs.create({
       delivery_id: delivery.id,
       fuel_type_id: container.fuelTypeId,
-      volume_id: container.volumeId,
+      container_id: container.containerId,
       delivery_type: type,
     })
   );
