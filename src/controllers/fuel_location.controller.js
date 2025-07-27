@@ -14,9 +14,17 @@ const getFuelLocations = catchAsync(async (req, res) => {
 });
 
 const createFuelLocation = catchAsync(async (req, res) => {
-  const { name, latitude, longitude, distance } = req.body;
+  const { name, latitude, longitude } = req.body;
 
-  const fuelLocation = await FuelLocations.create({ name, latitude, longitude, distance });
+  const existingLocation = await FuelLocations.findOne({ where: { name } });
+  if (existingLocation) {
+    return res.status(400).send({
+      success: false,
+      message: 'Fuel location with this name already exists',
+    });
+  }
+
+  const fuelLocation = await FuelLocations.create({ name, latitude, longitude });
 
   res.send({
     success: true,
@@ -27,7 +35,7 @@ const createFuelLocation = catchAsync(async (req, res) => {
 
 const editFuelLocation = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { name, latitude, longitude, distance } = req.body;
+  const { name, latitude, longitude } = req.body;
 
   const fuelLocation = await FuelLocations.findByPk(id);
   if (!fuelLocation) {
@@ -37,10 +45,17 @@ const editFuelLocation = catchAsync(async (req, res) => {
     });
   }
 
+  const existingLocation = await FuelLocations.findOne({ where: { name, id: { [db.Sequelize.Op.ne]: id } } });
+  if (existingLocation) {
+    return res.status(400).send({
+      success: false,
+      message: 'Fuel location with this name already exists',
+    });
+  }
+
   fuelLocation.name = name;
   fuelLocation.latitude = latitude;
   fuelLocation.longitude = longitude;
-  fuelLocation.distance = distance;
   await fuelLocation.save();
 
   res.send({
@@ -50,4 +65,23 @@ const editFuelLocation = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { getFuelLocations, createFuelLocation, editFuelLocation };
+const deleteFuelLocation = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const fuelLocation = await FuelLocations.findByPk(id);
+  if (!fuelLocation) {
+    return res.status(404).send({
+      success: false,
+      message: 'Fuel location not found',
+    });
+  }
+
+  await fuelLocation.destroy();
+
+  res.send({
+    success: true,
+    message: 'Fuel location deleted successfully',
+  });
+});
+
+module.exports = { getFuelLocations, createFuelLocation, editFuelLocation, deleteFuelLocation };

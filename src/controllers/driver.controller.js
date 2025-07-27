@@ -48,4 +48,23 @@ const editDriver = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { getDrivers, createDriver, editDriver };
+const deleteDriver = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const driver = await Drivers.findByPk(id);
+  if (!driver) {
+    return res.status(404).send({
+      success: false,
+      message: 'Driver not found',
+    });
+  }
+
+  await driver.destroy();
+
+  res.send({
+    success: true,
+    message: 'Driver deleted successfully',
+  });
+});
+
+module.exports = { getDrivers, createDriver, editDriver, deleteDriver };

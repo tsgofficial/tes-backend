@@ -12,6 +12,11 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING(7),
         allowNull: true,
       },
+      type: {
+        type: DataTypes.ENUM('truck', 'trailer'),
+        allowNull: false,
+        defaultValue: 'truck',
+      },
     },
     {
       sequelize,

@@ -1,5 +1,5 @@
 module.exports = function (sequelize, DataTypes) {
-  return sequelize.define(
+  const FuelLocations = sequelize.define(
     'fuel_locations',
     {
       id: {
@@ -20,10 +20,6 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.FLOAT,
         allowNull: true,
       },
-      distance: {
-        type: DataTypes.FLOAT,
-        allowNull: true,
-      },
     },
     {
       sequelize,
@@ -39,4 +35,13 @@ module.exports = function (sequelize, DataTypes) {
       ],
     }
   );
+
+  FuelLocations.associate = (models) => {
+    FuelLocations.hasMany(models.users, {
+      foreignKey: 'location_id',
+      as: 'users',
+    });
+  };
+
+  return FuelLocations;
 };

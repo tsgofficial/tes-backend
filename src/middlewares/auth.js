@@ -11,10 +11,7 @@ const protect = async (req, res, next) => {
   }
   try {
     const tokenObj = jwt.verify(token, process.env.JWT_SECRET ?? '');
-    req.userId = tokenObj.user.id;
-    req.kinderId = tokenObj.user.kinder.id;
-    req.roleId = tokenObj.user.role.id;
-    req.groupId = tokenObj.user.group.id;
+    req.user = tokenObj;
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {
