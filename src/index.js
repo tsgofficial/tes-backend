@@ -5,15 +5,15 @@ const logger = require('./config/logger');
 const { sequelize } = require('./models');
 
 clear();
-let server;
+
+const server = app.listen(config.port, () => {
+  logger.info(`Listening to port ${config.port}`);
+});
+
 sequelize
   .authenticate()
   .then(() => {
     logger.info('Connected to MySQL');
-
-    server = app.listen(config.port, () => {
-      logger.info(`Listening to port ${config.port}`);
-    });
   })
   .catch((error) => {
     logger.error('Unable to connect to the database:', error);
