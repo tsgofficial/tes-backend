@@ -144,7 +144,7 @@ const editTruck = catchAsync(async (req, res) => {
     });
   }
 
-  const existingTruck = await Trucks.findOne({ where: { license_plate: licensePlate, id: { [db.SequelizeOp.ne]: id } } });
+  const existingTruck = await Trucks.findOne({ where: { license_plate: licensePlate, id: { [db.Sequelize.ne]: id } } });
   if (existingTruck) {
     return res.status(400).send({
       success: false,

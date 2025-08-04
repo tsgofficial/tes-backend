@@ -5,6 +5,7 @@ const Volumes = db.volumes;
 const FuelLogs = db.fuel_logs;
 const FuelTypes = db.fuel_types;
 const Deliveries = db.deliveries;
+const Containers = db.containers;
 
 const getDeliveries = catchAsync(async (req, res) => {
   const deliveries = await Deliveries.findAll({
@@ -19,9 +20,16 @@ const getDeliveries = catchAsync(async (req, res) => {
             attributes: ['id', 'name'],
           },
           {
-            model: Volumes,
-            as: 'volume',
-            attributes: ['id', 'value'],
+            model: Containers,
+            as: 'container',
+            attributes: ['id'],
+            include: [
+              {
+                model: Volumes,
+                as: 'containerVolume',
+                attributes: ['value'],
+              },
+            ],
           },
         ],
       },
@@ -38,8 +46,8 @@ const getDeliveries = catchAsync(async (req, res) => {
       id: log.id,
       fuelType: log.fuelType.name,
       fuelTypeId: log.fuelType.id,
-      volume: log.volume.value,
-      volumeId: log.volume.id,
+      volume: log.container.containerVolume.value,
+      volumeId: log.container.containerVolume.id,
       deliveryType: log.delivery_type,
     })),
   }));
