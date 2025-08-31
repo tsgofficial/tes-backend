@@ -41,7 +41,7 @@ app.use(fileUpload());
 
 // enable cors
 const corsOptions = {
-  origin: ['https://admin.tes.mn', 'https://api.tes.mn', 'http://localhost:3000'], // Update with your Next.js domain
+  origin: ['*'], // Update with your Next.js domain
   credentials: true, // Allows cookies and authentication headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Allowed HTTP methods
 };
