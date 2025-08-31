@@ -21,7 +21,7 @@ const getTrucks = catchAsync(async (req, res) => {
           {
             model: Volumes,
             as: 'containerVolume',
-            attributes: ['value'],
+            attributes: ['id', 'value'],
           },
         ],
       },
@@ -30,10 +30,13 @@ const getTrucks = catchAsync(async (req, res) => {
   });
 
   const formattedTrucks = trucks.map((truck) => {
-    const containers = truck.truckContainers.map((container) => ({
-      id: container.id,
-      volume: container.containerVolume ? container.containerVolume.value : null,
-    }));
+    const containers = truck.truckContainers
+      .map((container) => ({
+        id: container.id,
+        volumeId: container.containerVolume?.id,
+        volume: container.containerVolume?.value,
+      }))
+      .filter((c) => c.id && c.volumeId && c.volume);
     return {
       id: truck.id,
       type: truck.type,

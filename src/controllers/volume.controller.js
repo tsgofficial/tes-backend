@@ -79,23 +79,23 @@ const editVolume = catchAsync(async (req, res) => {
   });
 });
 
-const deleteVolume = catchAsync(async (req, res) => {
-  const { id } = req.params;
+// const deleteVolume = catchAsync(async (req, res) => {
+//   const { id } = req.params;
 
-  const volume = await Volumes.findByPk(id);
-  if (!volume) {
-    return res.status(404).send({
-      success: false,
-      message: 'Volume not found',
-    });
-  }
+//   const volume = await Volumes.findByPk(id);
+//   if (!volume) {
+//     return res.status(404).send({
+//       success: false,
+//       message: 'Volume not found',
+//     });
+//   }
 
-  await volume.destroy();
+//   await volume.destroy();
 
-  res.send({
-    success: true,
-    message: 'Volume deleted successfully',
-  });
-});
+//   res.send({
+//     success: true,
+//     message: 'Volume deleted successfully',
+//   });
+// });
 
-module.exports = { getVolumes, createVolume, editVolume, deleteVolume };
+module.exports = { getVolumes, createVolume, editVolume };

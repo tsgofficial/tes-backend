@@ -43,11 +43,11 @@ module.exports = function (sequelize, DataTypes) {
     });
     FuelLocations.hasMany(models.fuel_location_distances, {
       foreignKey: 'location_id_1',
-      as: 'location1',
+      as: 'distance1',
     });
     FuelLocations.hasMany(models.fuel_location_distances, {
       foreignKey: 'location_id_2',
-      as: 'location2',
+      as: 'distance2',
     });
   };
 

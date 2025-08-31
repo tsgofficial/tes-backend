@@ -1,6 +1,7 @@
 const db = require('../models');
 const catchAsync = require('../utils/catchAsync');
 
+const FuelLocations = db.fuel_locations;
 const FuelLocationDistances = db.fuel_location_distances;
 
 const getFuelLocationDistances = catchAsync(async (req, res) => {
@@ -12,7 +13,23 @@ const getFuelLocationDistances = catchAsync(async (req, res) => {
       [db.Sequelize.Op.or]: [{ location_id_1: id }, { location_id_2: id }],
     };
   }
-  const fuelLocationDistances = await FuelLocationDistances.findAll({ where, order: [['id', 'DESC']] });
+  const fuelLocationDistances = await FuelLocationDistances.findAll({
+    where,
+    attributes: ['id', 'name', 'distance'],
+    include: [
+      {
+        model: FuelLocations,
+        as: 'location1',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
+      },
+      {
+        model: FuelLocations,
+        as: 'location2',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
+      },
+    ],
+    order: [['id', 'DESC']],
+  });
 
   res.send({
     success: true,

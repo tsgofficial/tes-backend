@@ -43,11 +43,11 @@ module.exports = function (sequelize, DataTypes) {
   FuelLocationDistances.associate = (models) => {
     FuelLocationDistances.belongsTo(models.fuel_locations, {
       foreignKey: 'location_id_1',
-      as: 'distance1',
+      as: 'location1',
     });
     FuelLocationDistances.belongsTo(models.fuel_locations, {
       foreignKey: 'location_id_2',
-      as: 'distance2',
+      as: 'location2',
     });
   };
 
