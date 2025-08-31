@@ -41,9 +41,8 @@ app.use(fileUpload());
 
 // enable cors
 const corsOptions = {
-  origin: ['*'], // Update with your Next.js domain
-  credentials: true, // Allows cookies and authentication headers
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Allowed HTTP methods
+  origin: '*',
+  allowedHeaders: ['*'],
 };
 
 app.use(cors(corsOptions));
