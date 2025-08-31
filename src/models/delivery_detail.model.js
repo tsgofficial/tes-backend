@@ -1,12 +1,16 @@
 module.exports = function (sequelize, DataTypes) {
-  const FuelLogs = sequelize.define(
-    'fuel_logs',
+  const DeliveryDetails = sequelize.define(
+    'delivery_details',
     {
       id: {
         autoIncrement: true,
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         primaryKey: true,
+      },
+      truck_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
       delivery_id: {
         type: DataTypes.INTEGER,
@@ -20,14 +24,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      delivery_type: {
-        type: DataTypes.ENUM('refueling', 'draining'),
-        allowNull: true,
-      },
     },
     {
       sequelize,
-      tableName: 'fuel_logs',
+      tableName: 'delivery_details',
       timestamps: false,
       indexes: [
         {
@@ -40,20 +40,24 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  FuelLogs.associate = (models) => {
-    FuelLogs.belongsTo(models.deliveries, {
+  DeliveryDetails.associate = (models) => {
+    DeliveryDetails.belongsTo(models.deliveries, {
       foreignKey: 'delivery_id',
       as: 'delivery',
     });
-    FuelLogs.belongsTo(models.fuel_types, {
+    DeliveryDetails.belongsTo(models.fuel_types, {
       foreignKey: 'fuel_type_id',
       as: 'fuelType',
     });
-    FuelLogs.belongsTo(models.containers, {
+    DeliveryDetails.belongsTo(models.containers, {
       foreignKey: 'container_id',
       as: 'container',
     });
+    DeliveryDetails.belongsTo(models.trucks, {
+      foreignKey: 'truck_id',
+      as: 'truck',
+    });
   };
 
-  return FuelLogs;
+  return DeliveryDetails;
 };

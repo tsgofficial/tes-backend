@@ -54,6 +54,10 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'location_id',
       as: 'location',
     });
+    Users.hasMany(models.deliveries, {
+      foreignKey: 'received_by',
+      as: 'receivedDeliveries',
+    });
   };
 
   return Users;

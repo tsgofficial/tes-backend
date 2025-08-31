@@ -38,6 +38,14 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'truck_id',
       as: 'truckContainers',
     });
+    Trucks.hasMany(models.deliveries, {
+      foreignKey: 'truck_id',
+      as: 'truckDeliveries',
+    });
+    Trucks.hasMany(models.delivery_details, {
+      foreignKey: 'truck_id',
+      as: 'truckDeliveryDetails',
+    });
   };
 
   return Trucks;

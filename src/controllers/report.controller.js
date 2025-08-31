@@ -2,7 +2,7 @@ const db = require('../models');
 const catchAsync = require('../utils/catchAsync');
 
 const Volumes = db.volumes;
-const FuelLogs = db.fuel_logs;
+const DeliveryDetails = db.delivery_details;
 const FuelTypes = db.fuel_types;
 const Deliveries = db.deliveries;
 const Containers = db.containers;
@@ -42,8 +42,8 @@ const getReport = catchAsync(async (req, res) => {
     where: whereConditions,
     include: [
       {
-        model: FuelLogs,
-        as: 'fuelLogs',
+        model: DeliveryDetails,
+        as: 'deliveryDetails',
         include: [
           { model: FuelTypes, as: 'fuelType' },
           { model: Containers, as: 'container', include: [{ model: Volumes, as: 'containerVolume' }] },
@@ -57,7 +57,7 @@ const getReport = catchAsync(async (req, res) => {
   // // let totalVolume = 0;
   // // let totalDistance = 0;
   // deliveries.forEach((delivery) => {
-  //   delivery.fuelLogs.forEach((fuelLog) => {
+  //   delivery.deliveryDetails.forEach((fuelLog) => {
   //     totalVolume += fuelLog.container.containerVolume.volume;
   //   });
   // });
@@ -69,7 +69,7 @@ const getReport = catchAsync(async (req, res) => {
       id: delivery.id,
       driverId: delivery.driver_id,
       truckId: delivery.truck_id,
-      fuelLogs: delivery.fuelLogs.map((fuelLog) => ({
+      deliveryDetails: delivery.deliveryDetails.map((fuelLog) => ({
         id: fuelLog.id,
         fuelType: fuelLog.fuelType.name,
         container: fuelLog.container.name,

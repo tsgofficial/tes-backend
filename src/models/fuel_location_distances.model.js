@@ -49,6 +49,14 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'location_id_2',
       as: 'location2',
     });
+    FuelLocationDistances.hasMany(models.deliveries, {
+      foreignKey: 'outbound_distance_id',
+      as: 'outboundDeliveries',
+    });
+    FuelLocationDistances.hasMany(models.deliveries, {
+      foreignKey: 'return_distance_id',
+      as: 'returnDeliveries',
+    });
   };
 
   return FuelLocationDistances;

@@ -29,9 +29,9 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   FuelType.associate = (models) => {
-    FuelType.hasMany(models.fuel_logs, {
+    FuelType.hasMany(models.delivery_details, {
       foreignKey: 'fuel_type_id',
-      as: 'fuelLogs',
+      as: 'deliveryDetails',
     });
   };
 

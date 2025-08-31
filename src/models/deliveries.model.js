@@ -8,6 +8,10 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
         primaryKey: true,
       },
+      date: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
       truck_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -16,16 +20,20 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      location_id: {
+      received_by: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      started_at: {
+      received_datetime: {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      ended_at: {
-        type: DataTypes.DATE,
+      outbound_distance_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      return_distance_id: {
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
     },
@@ -53,13 +61,21 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'driver_id',
       as: 'driver',
     });
-    Deliveries.belongsTo(models.fuel_locations, {
-      foreignKey: 'location_id',
-      as: 'location',
-    });
-    Deliveries.hasMany(models.fuel_logs, {
+    Deliveries.hasMany(models.delivery_details, {
       foreignKey: 'delivery_id',
-      as: 'fuelLogs',
+      as: 'deliveryDetails',
+    });
+    Deliveries.belongsTo(models.users, {
+      foreignKey: 'received_by',
+      as: 'receiver',
+    });
+    Deliveries.belongsTo(models.fuel_location_distances, {
+      foreignKey: 'outbound_distance_id',
+      as: 'outboundDistance',
+    });
+    Deliveries.belongsTo(models.fuel_location_distances, {
+      foreignKey: 'return_distance_id',
+      as: 'returnDistance',
     });
   };
 
