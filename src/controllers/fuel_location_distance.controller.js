@@ -63,11 +63,28 @@ const createFuelLocationDistance = catchAsync(async (req, res) => {
     });
   }
 
-  const fuelLocationDistance = await FuelLocationDistances.create({
+  const createdFuelLocationDistance = await FuelLocationDistances.create({
     name,
     distance,
     location_id_1: locationId1,
     location_id_2: locationId2,
+  });
+
+  const fuelLocationDistance = await FuelLocationDistances.findByPk(createdFuelLocationDistance.id, {
+    attributes: ['id', 'name', 'distance'],
+    include: [
+      {
+        model: FuelLocations,
+        as: 'location1',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
+      },
+      {
+        model: FuelLocations,
+        as: 'location2',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
+      },
+    ],
+    order: [['id', 'DESC']],
   });
 
   res.send({
@@ -88,8 +105,8 @@ const editFuelLocationDistance = catchAsync(async (req, res) => {
     });
   }
 
-  const fuelLocationDistance = await FuelLocationDistances.findByPk(id);
-  if (!fuelLocationDistance) {
+  const existingFuelLocationDistance = await FuelLocationDistances.findByPk(id);
+  if (!existingFuelLocationDistance) {
     return res.status(404).send({
       success: false,
       message: 'Fuel location not found',
@@ -104,11 +121,28 @@ const editFuelLocationDistance = catchAsync(async (req, res) => {
     });
   }
 
-  fuelLocationDistance.name = name;
-  fuelLocationDistance.location_id_1 = locationId1;
-  fuelLocationDistance.location_id_2 = locationId2;
-  fuelLocationDistance.distance = distance;
-  await fuelLocationDistance.save();
+  existingFuelLocationDistance.name = name;
+  existingFuelLocationDistance.location_id_1 = locationId1;
+  existingFuelLocationDistance.location_id_2 = locationId2;
+  existingFuelLocationDistance.distance = distance;
+  const updatedFuelLocationDistance = await existingFuelLocationDistance.save();
+
+  const fuelLocationDistance = await FuelLocationDistances.findByPk(updatedFuelLocationDistance.id, {
+    attributes: ['id', 'name', 'distance'],
+    include: [
+      {
+        model: FuelLocations,
+        as: 'location1',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
+      },
+      {
+        model: FuelLocations,
+        as: 'location2',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
+      },
+    ],
+    order: [['id', 'DESC']],
+  });
 
   res.send({
     success: true,

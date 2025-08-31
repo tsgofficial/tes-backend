@@ -3,6 +3,7 @@ const catchAsync = require('../utils/catchAsync');
 
 const Trucks = db.trucks;
 const Volumes = db.volumes;
+const Drivers = db.drivers;
 const DeliveryDetails = db.delivery_details;
 const FuelTypes = db.fuel_types;
 const Deliveries = db.deliveries;
@@ -11,6 +12,10 @@ const Containers = db.containers;
 const getDeliveries = catchAsync(async (req, res) => {
   const deliveries = await Deliveries.findAll({
     include: [
+      {
+        model: Drivers,
+        as: 'driver',
+      },
       {
         model: Trucks,
         as: 'truck',
@@ -51,7 +56,7 @@ const getDeliveries = catchAsync(async (req, res) => {
   const formattedDeliveries = deliveries.map((delivery) => ({
     id: delivery.id,
     date: delivery.date,
-    driverId: delivery.driver_id,
+    driver: delivery.driver,
     truck: {
       id: delivery.truck_id,
       licensePlate: delivery.truck?.license_plate || '',
