@@ -34,6 +34,7 @@ const getDeliveries = catchAsync(async (req, res) => {
         ],
       },
     ],
+    order: [['id', 'DESC']],
   });
 
   const formattedDeliveries = deliveries.map((delivery) => ({

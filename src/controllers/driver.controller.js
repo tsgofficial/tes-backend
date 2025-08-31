@@ -4,7 +4,9 @@ const catchAsync = require('../utils/catchAsync');
 const Drivers = db.drivers;
 
 const getDrivers = catchAsync(async (req, res) => {
-  const drivers = await Drivers.findAll();
+  const drivers = await Drivers.findAll({
+    order: [['id', 'DESC']],
+  });
 
   res.send({
     success: true,

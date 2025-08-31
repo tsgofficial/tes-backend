@@ -4,7 +4,9 @@ const catchAsync = require('../utils/catchAsync');
 const Volumes = db.volumes;
 
 const getVolumes = catchAsync(async (req, res) => {
-  const volumes = await Volumes.findAll();
+  const volumes = await Volumes.findAll({
+    order: [['id', 'DESC']],
+  });
 
   res.send({
     success: true,

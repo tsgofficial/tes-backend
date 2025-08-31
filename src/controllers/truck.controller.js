@@ -26,6 +26,7 @@ const getTrucks = catchAsync(async (req, res) => {
         ],
       },
     ],
+    order: [['id', 'DESC']],
   });
 
   const formattedTrucks = trucks.map((truck) => {

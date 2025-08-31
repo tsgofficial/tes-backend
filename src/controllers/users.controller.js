@@ -8,6 +8,7 @@ const getUsers = catchAsync(async (req, res) => {
     where: {
       [db.Sequelize.Op.or]: [{ role: 'manager' }, { role: 'inspector' }],
     },
+    order: [['id', 'DESC']],
   });
 
   res.send({

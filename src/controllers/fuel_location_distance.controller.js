@@ -12,7 +12,7 @@ const getFuelLocationDistances = catchAsync(async (req, res) => {
       [db.Sequelize.Op.or]: [{ location_id_1: id }, { location_id_2: id }],
     };
   }
-  const fuelLocationDistances = await FuelLocationDistances.findAll({ where });
+  const fuelLocationDistances = await FuelLocationDistances.findAll({ where, order: [['id', 'DESC']] });
 
   res.send({
     success: true,

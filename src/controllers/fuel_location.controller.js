@@ -4,7 +4,9 @@ const catchAsync = require('../utils/catchAsync');
 const FuelLocations = db.fuel_locations;
 
 const getFuelLocations = catchAsync(async (req, res) => {
-  const fuelLocations = await FuelLocations.findAll();
+  const fuelLocations = await FuelLocations.findAll({
+    order: [['id', 'DESC']],
+  });
 
   res.send({
     success: true,
