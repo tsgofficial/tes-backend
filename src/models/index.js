@@ -28,6 +28,7 @@ db.fuel_locations = require('./fuel_locations.model')(sequelize, Sequelize);
 db.fuel_types = require('./fuel_types.model')(sequelize, Sequelize);
 db.fuel_logs = require('./fuel_logs.model')(sequelize, Sequelize);
 db.deliveries = require('./deliveries.model')(sequelize, Sequelize);
+db.fuel_location_distances = require('./fuel_location_distances.model')(sequelize, Sequelize);
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {

@@ -1,6 +1,6 @@
 module.exports = function (sequelize, DataTypes) {
-  const FuelLocations = sequelize.define(
-    'fuel_locations',
+  const FuelLocationDistances = sequelize.define(
+    'fuel_location_distances',
     {
       id: {
         autoIncrement: true,
@@ -9,21 +9,25 @@ module.exports = function (sequelize, DataTypes) {
         primaryKey: true,
       },
       name: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING(255),
         allowNull: true,
       },
-      latitude: {
-        type: DataTypes.FLOAT,
+      location_id_1: {
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
-      longitude: {
-        type: DataTypes.FLOAT,
+      location_id_2: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      distance: {
+        type: DataTypes.DOUBLE,
         allowNull: true,
       },
     },
     {
       sequelize,
-      tableName: 'fuel_locations',
+      tableName: 'fuel_location_distances',
       timestamps: false,
       indexes: [
         {
@@ -36,20 +40,16 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  FuelLocations.associate = (models) => {
-    FuelLocations.hasMany(models.users, {
-      foreignKey: 'location_id',
-      as: 'users',
-    });
-    FuelLocations.hasMany(models.fuel_location_distances, {
+  FuelLocationDistances.associate = (models) => {
+    FuelLocationDistances.belongsTo(models.fuel_locations, {
       foreignKey: 'location_id_1',
-      as: 'location1',
+      as: 'distance1',
     });
-    FuelLocations.hasMany(models.fuel_location_distances, {
+    FuelLocationDistances.belongsTo(models.fuel_locations, {
       foreignKey: 'location_id_2',
-      as: 'location2',
+      as: 'distance2',
     });
   };
 
-  return FuelLocations;
+  return FuelLocationDistances;
 };

@@ -7,6 +7,9 @@ const drivers = require('./driver.route');
 const volumes = require('./volume.route');
 const deliveries = require('./delivery.route');
 const fuelLocations = require('./fuel_location.route');
+const fuelLocationDistances = require('./fuel_location_distance.route');
+
+const report = require('./report.route');
 // const { protect } = require('../middlewares/auth');
 
 const router = express.Router();
@@ -42,6 +45,14 @@ const adminRoutes = [
   {
     path: '/deliveries',
     route: deliveries,
+  },
+  {
+    path: '/report',
+    route: report,
+  },
+  {
+    path: '/fuel-location-distances',
+    route: fuelLocationDistances,
   },
 ];
 
