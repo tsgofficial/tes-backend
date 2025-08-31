@@ -311,4 +311,84 @@ const editDelivery = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { getDeliveries, createDelivery, editDelivery };
+const deleteDelivery = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const delivery = await Deliveries.findByPk(id);
+  if (!delivery) {
+    return res.status(404).send({
+      success: false,
+      message: 'Delivery not found',
+    });
+  }
+
+  await DeliveryDetails.destroy({ where: { delivery_id: id } });
+  await delivery.destroy();
+
+  res.send({
+    success: true,
+    message: 'Delivery deleted successfully',
+  });
+});
+
+const receiveDelivery = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req;
+
+  const { outboundDistanceId, returnDistanceId, densityDetails } = req.body;
+
+  const delivery = await Deliveries.findByPk(id);
+  if (!delivery) {
+    return res.status(404).send({
+      success: false,
+      message: 'Delivery not found',
+    });
+  }
+
+  if (!delivery.received_by) {
+    delivery.received_by = userId;
+  }
+  if (!delivery.received_datetime) {
+    delivery.received_datetime = new Date();
+  }
+  if (outboundDistanceId) {
+    delivery.outbound_distance_id = outboundDistanceId;
+  }
+  if (returnDistanceId) {
+    delivery.return_distance_id = returnDistanceId;
+  }
+  if (densityDetails && densityDetails.length > 0) {
+    const densityValues = densityDetails.map((d) => d.density);
+    if (densityValues.some((d) => !d || d <= 0 || d > 1)) {
+      return res.status(400).send({
+        success: false,
+        message: 'Density values must be greater between 0 and 1',
+      });
+    }
+
+    const densityUpdatePromises = densityDetails
+      .filter((densityDetail) => densityDetail && densityDetail.detailId) // Filter out invalid entries
+      .map((densityDetail) => {
+        const { detailId, density } = densityDetail;
+        return DeliveryDetails.update(
+          { density },
+          {
+            where: { id: detailId, delivery_id: id },
+          }
+        );
+      });
+
+    if (densityUpdatePromises.length > 0) {
+      await Promise.all(densityUpdatePromises);
+    }
+  }
+  await delivery.save();
+
+  res.send({
+    success: true,
+    message: 'Delivery received',
+    data: delivery,
+  });
+});
+
+module.exports = { getDeliveries, createDelivery, editDelivery, deleteDelivery, receiveDelivery };
