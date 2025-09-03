@@ -41,12 +41,13 @@ app.use(fileUpload());
 
 // enable cors
 const corsOptions = {
-  origin: '*',
+  origin: 'https://tes-frontend-amber.vercel.app',
   allowedHeaders: ['*'],
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 // jwt authentication
 app.use(passport.initialize());
