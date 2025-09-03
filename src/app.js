@@ -41,9 +41,8 @@ app.use(fileUpload());
 
 // enable cors
 const corsOptions = {
-  origin: 'https://tes-frontend-amber.vercel.app',
+  origin: '*',
   allowedHeaders: ['*'],
-  credentials: true,
 };
 
 app.use(cors(corsOptions));
