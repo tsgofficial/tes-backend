@@ -8,6 +8,7 @@ const DeliveryDetails = db.delivery_details;
 const FuelTypes = db.fuel_types;
 const Deliveries = db.deliveries;
 const Containers = db.containers;
+const FuelLocations = db.fuel_locations;
 
 const getDeliveries = catchAsync(async (req, res) => {
   const deliveries = await Deliveries.findAll({
@@ -20,6 +21,16 @@ const getDeliveries = catchAsync(async (req, res) => {
         model: Trucks,
         as: 'truck',
         attributes: ['id', 'license_plate'],
+      },
+      {
+        model: FuelLocations,
+        as: 'fromLocation',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
+      },
+      {
+        model: FuelLocations,
+        as: 'toLocation',
+        attributes: ['id', 'name', 'latitude', 'longitude'],
       },
       {
         model: DeliveryDetails,
@@ -57,6 +68,8 @@ const getDeliveries = catchAsync(async (req, res) => {
     id: delivery.id,
     date: delivery.date,
     driver: delivery.driver,
+    fromLocation: delivery.fromLocation,
+    toLocation: delivery.toLocation,
     truck: {
       id: delivery.truck_id,
       licensePlate: delivery.truck?.license_plate || '',
@@ -104,11 +117,11 @@ const getDeliveries = catchAsync(async (req, res) => {
 });
 
 const createDelivery = catchAsync(async (req, res) => {
-  const { date, driverId, truck, trailers } = req.body;
+  const { date, driverId, fromLocationId, toLocationId, truck, trailers } = req.body;
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!date || !driverId || !truckId || (fuelDetails?.length ?? 0) === 0) {
+  if (!date || !driverId || !fromLocationId || !toLocationId || !truckId || (fuelDetails?.length ?? 0) === 0) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
@@ -164,6 +177,8 @@ const createDelivery = catchAsync(async (req, res) => {
     date,
     truck_id: truck.id,
     driver_id: driverId,
+    from_location_id: fromLocationId,
+    to_location_id: toLocationId,
   });
 
   const fuelLogPromises = fuelDetails.map((fuelDetail) =>

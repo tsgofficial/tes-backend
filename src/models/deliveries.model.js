@@ -20,6 +20,14 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      from_location_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      to_location_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       received_by: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -76,6 +84,14 @@ module.exports = function (sequelize, DataTypes) {
     Deliveries.belongsTo(models.fuel_location_distances, {
       foreignKey: 'return_distance_id',
       as: 'returnDistance',
+    });
+    Deliveries.belongsTo(models.fuel_locations, {
+      foreignKey: 'from_location_id',
+      as: 'fromLocation',
+    });
+    Deliveries.belongsTo(models.fuel_locations, {
+      foreignKey: 'to_location_id',
+      as: 'toLocation',
     });
   };
 
