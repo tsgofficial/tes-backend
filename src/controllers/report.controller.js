@@ -10,6 +10,7 @@ const {
   containers: Containers,
   fuel_location_distances: FuelLocationDistances,
   trucks: Trucks,
+  trailers: Trailers,
   users: Users,
   fuel_locations: FuelLocations,
 } = db;
@@ -22,6 +23,7 @@ const {
  * @param {string} endDate - End date for report period (YYYY-MM-DD)
  * @param {number} [driverId] - Optional driver ID filter
  * @param {number} [truckId] - Optional truck ID filter
+ * @param {number} [trailerId] - Optional trailer ID filter
  * @returns {Object} Comprehensive report with totals and delivery details
  *
  * Response structure:
@@ -35,7 +37,7 @@ const {
  * - deliveries: Detailed delivery information grouped by date and location
  */
 const getReport = catchAsync(async (req, res) => {
-  const { startDate, endDate, driverId, truckId } = req.query;
+  const { startDate, endDate, driverId, truckId, trailerId } = req.query;
 
   // Validate required parameters
   if (!startDate || !endDate) {
@@ -45,10 +47,10 @@ const getReport = catchAsync(async (req, res) => {
     });
   }
 
-  if (!driverId && !truckId) {
+  if (!driverId && !truckId && !trailerId) {
     return res.status(400).send({
       success: false,
-      message: 'Either driverId or truckId is required for filtering',
+      message: 'Either driverId, truckId, or trailerId is required for filtering',
     });
   }
 
@@ -85,6 +87,10 @@ const getReport = catchAsync(async (req, res) => {
     whereConditions.truck_id = parseInt(truckId, 10);
   }
 
+  if (trailerId) {
+    whereConditions.trailer_id = parseInt(trailerId, 10);
+  }
+
   try {
     // Fetch deliveries with comprehensive includes
     const deliveries = await Deliveries.findAll({
@@ -106,9 +112,24 @@ const getReport = catchAsync(async (req, res) => {
             {
               model: Trucks,
               as: 'truck',
-              attributes: ['id', 'license_plate', 'type'],
+              attributes: ['id', 'license_plate'],
+            },
+            {
+              model: Trailers,
+              as: 'trailer',
+              attributes: ['id', 'license_plate'],
             },
           ],
+        },
+        {
+          model: Trucks,
+          as: 'truck',
+          attributes: ['id', 'license_plate'],
+        },
+        {
+          model: Trailers,
+          as: 'trailer',
+          attributes: ['id', 'license_plate'],
         },
         {
           model: FuelLocationDistances,
@@ -161,12 +182,12 @@ const getReport = catchAsync(async (req, res) => {
       // Group delivery details by truck and trailer
       const trucksMap = new Map();
       const trailersMap = new Map();
+      const eachFuelTypeMap = new Map();
 
       let deliveryTotalMass = 0;
-      const deliveryFuelTypes = new Map();
 
       delivery.deliveryDetails.forEach((detail) => {
-        const volume = detail.container?.containerVolume?.value || 0;
+        const volume = detail.container?.volume || 0;
         const density = parseFloat(detail.density) || 0;
         const mass = volume * density;
 
@@ -185,6 +206,7 @@ const getReport = catchAsync(async (req, res) => {
 
         if (fuelTypeMap.has(fuelTypeId)) {
           const existing = fuelTypeMap.get(fuelTypeId);
+          existing.mass += mass;
           existing.volume += volume;
           existing.totalDensity += density;
           existing.count += 1;
@@ -193,21 +215,11 @@ const getReport = catchAsync(async (req, res) => {
           fuelTypeMap.set(fuelTypeId, {
             id: fuelTypeId,
             name: fuelTypeName,
+            mass,
             volume,
             totalDensity: density,
             count: 1,
             averageDensity: density,
-          });
-        }
-
-        // Aggregate delivery fuel types
-        if (deliveryFuelTypes.has(fuelTypeId)) {
-          deliveryFuelTypes.get(fuelTypeId).volume += volume;
-        } else {
-          deliveryFuelTypes.set(fuelTypeId, {
-            id: fuelTypeId,
-            name: fuelTypeName,
-            volume,
           });
         }
 
@@ -221,28 +233,49 @@ const getReport = catchAsync(async (req, res) => {
           mass,
         };
 
-        // Group by truck type
-        const { truck } = detail;
-        if (truck) {
-          if (truck.type === 'truck') {
-            if (!trucksMap.has(truck.id)) {
-              trucksMap.set(truck.id, {
-                id: truck.id,
-                license_plate: truck.license_plate,
-                fuelDetails: [],
-              });
-            }
-            trucksMap.get(truck.id).fuelDetails.push(fuelDetail);
-          } else if (truck.type === 'trailer') {
-            if (!trailersMap.has(truck.id)) {
-              trailersMap.set(truck.id, {
-                id: truck.id,
-                license_plate: truck.license_plate,
-                fuelDetails: [],
-              });
-            }
-            trailersMap.get(truck.id).fuelDetails.push(fuelDetail);
+        if (!eachFuelTypeMap.has(fuelTypeId)) {
+          eachFuelTypeMap.set(fuelTypeId, {
+            id: fuelTypeId,
+            name: fuelTypeName,
+            mass: 0,
+            count: 0,
+            volume: 0,
+            totalDensity: 0,
+            averageDensity: 0,
+          });
+        }
+        const eachFuelType = eachFuelTypeMap.get(fuelTypeId);
+        eachFuelType.mass += mass;
+        eachFuelType.count += 1;
+        eachFuelType.volume += volume;
+        eachFuelType.totalDensity += density;
+        eachFuelType.averageDensity = eachFuelType.totalDensity / eachFuelType.count;
+
+        // Group by truck or trailer
+        const { truck, trailer } = detail;
+
+        // Handle truck fuel details
+        if (truck && detail.truck_id) {
+          if (!trucksMap.has(truck.id)) {
+            trucksMap.set(truck.id, {
+              id: truck.id,
+              license_plate: truck.license_plate,
+              fuelDetails: [],
+            });
           }
+          trucksMap.get(truck.id).fuelDetails.push(fuelDetail);
+        }
+
+        // Handle trailer fuel details
+        if (trailer && detail.trailer_id) {
+          if (!trailersMap.has(trailer.id)) {
+            trailersMap.set(trailer.id, {
+              id: trailer.id,
+              license_plate: trailer.license_plate,
+              fuelDetails: [],
+            });
+          }
+          trailersMap.get(trailer.id).fuelDetails.push(fuelDetail);
         }
       });
 
@@ -264,17 +297,38 @@ const getReport = catchAsync(async (req, res) => {
               lastname: delivery.receiver.lastname,
             }
           : null,
+        deliveryTruck: delivery.truck
+          ? {
+              id: delivery.truck.id,
+              license_plate: delivery.truck.license_plate,
+            }
+          : null,
+        deliveryTrailer: delivery.trailer
+          ? {
+              id: delivery.trailer.id,
+              license_plate: delivery.trailer.license_plate,
+            }
+          : null,
         tonKm: Math.round(deliveryTonKm * 100) / 100, // Round to 2 decimal places
         withLoadDistance: Math.round(outboundDistance * 100) / 100,
         withoutLoadDistance: Math.round(returnDistance * 100) / 100,
-        fuelTypeDetail: Array.from(deliveryFuelTypes.values()),
-        details: [
-          {
-            truck: Array.from(trucksMap.values())[0] || null, // Assuming one main truck per delivery
-            trailers: Array.from(trailersMap.values()),
-          },
-        ],
+        // details: {
+        //   trucks: Array.from(trucksMap.values()),
+        //   trailers: Array.from(trailersMap.values()),
+        // },
+        details: Array.from(eachFuelTypeMap.values()),
       };
+    });
+
+    const deliveryDateMap = new Map();
+    processedDeliveries.forEach((delivery) => {
+      const { date, ...rest } = delivery;
+      if (!date) return;
+
+      if (!deliveryDateMap.has(date)) {
+        deliveryDateMap.set(date, []);
+      }
+      deliveryDateMap.get(date).push(rest);
     });
 
     // Convert fuel type map to array and clean up averages
@@ -294,7 +348,7 @@ const getReport = catchAsync(async (req, res) => {
       totalWithLoadDistance: Math.round(totalWithLoadDistance * 100) / 100,
       totalWithoutLoadDistance: Math.round(totalWithoutLoadDistance * 100) / 100,
       totalFuelTypeDetail,
-      deliveries: processedDeliveries,
+      deliveries: Array.from(deliveryDateMap.entries()).map(([date, value]) => ({ date, deliveries: value })),
     };
 
     res.send({

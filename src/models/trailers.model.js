@@ -33,6 +33,14 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Trailers.associate = function (models) {
+    Trailers.hasMany(models.deliveries, {
+      foreignKey: 'trailer_id',
+      as: 'deliveries',
+    });
+    Trailers.hasMany(models.delivery_details, {
+      foreignKey: 'trailer_id',
+      as: 'deliveryDetails',
+    });
     Trailers.belongsTo(models.trucks, {
       foreignKey: 'truck_id',
       as: 'truck',

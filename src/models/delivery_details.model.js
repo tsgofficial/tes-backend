@@ -12,6 +12,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      trailer_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       delivery_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -60,6 +64,10 @@ module.exports = function (sequelize, DataTypes) {
     DeliveryDetails.belongsTo(models.trucks, {
       foreignKey: 'truck_id',
       as: 'truck',
+    });
+    DeliveryDetails.belongsTo(models.trailers, {
+      foreignKey: 'trailer_id',
+      as: 'trailer',
     });
   };
 

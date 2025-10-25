@@ -12,11 +12,15 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      driver_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       truck_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      driver_id: {
+      trailer_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -68,6 +72,10 @@ module.exports = function (sequelize, DataTypes) {
     Deliveries.belongsTo(models.drivers, {
       foreignKey: 'driver_id',
       as: 'driver',
+    });
+    Deliveries.belongsTo(models.trailers, {
+      foreignKey: 'trailer_id',
+      as: 'trailer',
     });
     Deliveries.hasMany(models.delivery_details, {
       foreignKey: 'delivery_id',
