@@ -14,6 +14,11 @@ const getTrucks = catchAsync(async (req, res) => {
     where: type ? { type } : {},
     include: [
       {
+        model: Trucks,
+        as: 'attachedTrailer',
+        attributes: ['id', 'license_plate'],
+      },
+      {
         attributes: ['id'],
         model: Containers,
         as: 'truckContainers',
@@ -41,6 +46,9 @@ const getTrucks = catchAsync(async (req, res) => {
       id: truck.id,
       type: truck.type,
       license_plate: truck.license_plate,
+      lastBatteryChangedAt: truck.last_battery_changed_at,
+      lastInspectedAt: truck.last_inspected_at,
+      trailer: truck.attachedTrailer,
       containers,
     };
   });
@@ -53,7 +61,7 @@ const getTrucks = catchAsync(async (req, res) => {
 });
 
 const createTruck = catchAsync(async (req, res) => {
-  const { type, licensePlate, containers } = req.body;
+  const { type, licensePlate, lastBatteryChangedAt, lastInspectedAt, containers } = req.body;
 
   if (type !== 'truck' && type !== 'trailer') {
     return res.status(400).send({
@@ -91,7 +99,12 @@ const createTruck = catchAsync(async (req, res) => {
     });
   }
 
-  const truck = await Trucks.create({ type, license_plate: licensePlate });
+  const truck = await Trucks.create({
+    type,
+    license_plate: licensePlate,
+    last_battery_changed_at: lastBatteryChangedAt,
+    last_inspected_at: lastInspectedAt,
+  });
 
   const containerPromises = containers.map((container) =>
     Containers.create({
@@ -110,7 +123,7 @@ const createTruck = catchAsync(async (req, res) => {
 
 const editTruck = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { type, licensePlate, containers } = req.body;
+  const { type, licensePlate, lastBatteryChangedAt, lastInspectedAt, containers } = req.body;
 
   if (type !== 'truck' && type !== 'trailer') {
     return res.status(400).send({
@@ -158,6 +171,8 @@ const editTruck = catchAsync(async (req, res) => {
 
   truck.type = type;
   truck.license_plate = licensePlate;
+  truck.last_battery_changed_at = lastBatteryChangedAt;
+  truck.last_inspected_at = lastInspectedAt;
   await truck.save();
 
   await Containers.destroy({ where: { truck_id: id } });

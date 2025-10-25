@@ -1,5 +1,5 @@
-module.exports = (sequelize, DataTypes) => {
-  return sequelize.define(
+module.exports = function (sequelize, DataTypes) {
+  const Drivers = sequelize.define(
     'drivers',
     {
       id: {
@@ -16,6 +16,26 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
+      position: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      register: {
+        type: DataTypes.STRING(10),
+        allowNull: true,
+      },
+      phone: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      truck_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: true,
+        references: {
+          model: 'trucks',
+          key: 'id',
+        },
+      },
     },
     {
       sequelize,
@@ -31,4 +51,10 @@ module.exports = (sequelize, DataTypes) => {
       ],
     }
   );
+
+  Drivers.associate = function (models) {
+    Drivers.hasOne(models.trucks, { foreignKey: 'id', sourceKey: 'truck_id', as: 'truck' });
+  };
+
+  return Drivers;
 };

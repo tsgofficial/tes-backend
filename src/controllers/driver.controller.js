@@ -1,11 +1,21 @@
 const db = require('../models');
 const catchAsync = require('../utils/catchAsync');
 
+const Trucks = db.trucks;
 const Drivers = db.drivers;
 
 const getDrivers = catchAsync(async (req, res) => {
   const drivers = await Drivers.findAll({
     order: [['id', 'DESC']],
+    include: [
+      {
+        model: Trucks,
+        as: 'truck',
+        attributes: ['id', 'type', 'license_plate'],
+      },
+    ],
+    raw: true,
+    nest: true,
   });
 
   res.send({
@@ -16,9 +26,9 @@ const getDrivers = catchAsync(async (req, res) => {
 });
 
 const createDriver = catchAsync(async (req, res) => {
-  const { firstname, lastname } = req.body;
+  const { firstname, lastname, position, register, phone } = req.body;
 
-  const driver = await Drivers.create({ firstname, lastname });
+  const driver = await Drivers.create({ firstname, lastname, position, register, phone });
 
   res.send({
     success: true,
@@ -29,7 +39,7 @@ const createDriver = catchAsync(async (req, res) => {
 
 const editDriver = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { firstname, lastname } = req.body;
+  const { firstname, lastname, position, register, phone } = req.body;
 
   const driver = await Drivers.findByPk(id);
   if (!driver) {
@@ -41,6 +51,9 @@ const editDriver = catchAsync(async (req, res) => {
 
   driver.firstname = firstname;
   driver.lastname = lastname;
+  driver.position = position;
+  driver.register = register;
+  driver.phone = phone;
   await driver.save();
 
   res.send({

@@ -1,12 +1,12 @@
 var DataTypes = require("sequelize").DataTypes;
-var _fuel_location_distances = require("./fuel_location_distances");
+var _trucks = require("./trucks");
 
 function initModels(sequelize) {
-  var fuel_location_distances = _fuel_location_distances(sequelize, DataTypes);
+  var trucks = _trucks(sequelize, DataTypes);
 
 
   return {
-    fuel_location_distances,
+    trucks,
   };
 }
 module.exports = initModels;
