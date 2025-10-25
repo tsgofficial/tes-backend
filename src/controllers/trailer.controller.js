@@ -40,7 +40,7 @@ const getTrailers = catchAsync(async (req, res) => {
 });
 
 const createTrailer = catchAsync(async (req, res) => {
-  const { license_plate, truck_id, containers } = req.body;
+  const { license_plate, containers } = req.body;
 
   if (!trailerRegExp.test(license_plate)) {
     return res.status(400).send({
@@ -59,7 +59,6 @@ const createTrailer = catchAsync(async (req, res) => {
 
   const trailer = await Trailers.create({
     license_plate,
-    truck_id,
   });
 
   const createdContainers = await Containers.bulkCreate(
@@ -83,7 +82,7 @@ const editTrailer = catchAsync(async (req, res) => {
   const { id } = req.params;
   const trailerId = Number(id);
 
-  const { license_plate, truck_id, containers } = req.body;
+  const { license_plate, containers } = req.body;
 
   if (!trailerRegExp.test(license_plate)) {
     return res.status(400).send({
@@ -110,7 +109,6 @@ const editTrailer = catchAsync(async (req, res) => {
     });
   }
 
-  trailer.truck_id = truck_id;
   trailer.license_plate = license_plate;
   await trailer.save();
 

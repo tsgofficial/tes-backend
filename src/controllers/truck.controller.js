@@ -38,7 +38,7 @@ const getTrucks = catchAsync(async (req, res) => {
 });
 
 const createTruck = catchAsync(async (req, res) => {
-  const { driver_id, license_plate, last_battery_changed_at, last_inspected_at, containers } = req.body;
+  const { driver_id, trailer_id, license_plate, last_battery_changed_at, last_inspected_at, containers } = req.body;
 
   if (!containers || containers.length === 0) {
     return res.status(400).send({
@@ -76,6 +76,15 @@ const createTruck = catchAsync(async (req, res) => {
     }))
   );
 
+  if (trailer_id) {
+    const trailer = await Trailers.findByPk(trailer_id);
+
+    if (trailer) {
+      trailer.truck_id = truck.id;
+      trailer.save();
+    }
+  }
+
   res.send({
     success: true,
     message: 'Truck created successfully',
@@ -90,7 +99,7 @@ const editTruck = catchAsync(async (req, res) => {
   const { id } = req.params;
   const truckId = Number(id);
 
-  const { driver_id, license_plate, last_battery_changed_at, last_inspected_at, containers } = req.body;
+  const { driver_id, trailer_id, license_plate, last_battery_changed_at, last_inspected_at, containers } = req.body;
 
   if (!containers || containers.length === 0) {
     return res.status(400).send({
@@ -135,6 +144,15 @@ const editTruck = catchAsync(async (req, res) => {
       volume: container.volume,
     }))
   );
+
+  if (trailer_id) {
+    const trailer = await Trailers.findByPk(trailer_id);
+
+    if (trailer) {
+      trailer.truck_id = truck.id;
+      trailer.save();
+    }
+  }
 
   res.send({
     success: true,
