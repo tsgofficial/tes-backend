@@ -4,7 +4,7 @@ const auth = require('./auth.route');
 const users = require('./users.route');
 const trucks = require('./truck.route');
 const drivers = require('./driver.route');
-const volumes = require('./volume.route');
+const trailers = require('./trailer.route');
 const deliveries = require('./delivery.route');
 const fuelLocations = require('./fuel_location.route');
 const fuelLocationDistances = require('./fuel_location_distance.route');
@@ -31,8 +31,8 @@ const adminRoutes = [
     route: trucks,
   },
   {
-    path: '/volumes',
-    route: volumes,
+    path: '/trailers',
+    route: trailers,
   },
   {
     path: '/drivers',

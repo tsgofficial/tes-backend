@@ -28,14 +28,6 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      truck_id: {
-        type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: true,
-        references: {
-          model: 'trucks',
-          key: 'id',
-        },
-      },
     },
     {
       sequelize,
@@ -53,7 +45,7 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Drivers.associate = function (models) {
-    Drivers.hasOne(models.trucks, { foreignKey: 'id', sourceKey: 'truck_id', as: 'truck' });
+    Drivers.hasOne(models.trucks, { foreignKey: 'driver_id', as: 'truck' });
   };
 
   return Drivers;

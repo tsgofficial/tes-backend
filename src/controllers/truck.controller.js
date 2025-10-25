@@ -2,73 +2,43 @@ const db = require('../models');
 const catchAsync = require('../utils/catchAsync');
 
 const Trucks = db.trucks;
-const Volumes = db.volumes;
+const Drivers = db.drivers;
+const Trailers = db.trailers;
 const Containers = db.containers;
 
 const truckRegExp = /^\d{4}[А-Яа-яӨөҮү]{3}$/;
-const trailerRegExp = /^\d{4}[А-Яа-яӨөҮү]{2}$/;
 
 const getTrucks = catchAsync(async (req, res) => {
-  const { type } = req.query;
-  const trucks = await Trucks.findAll({
-    where: type ? { type } : {},
+  const trucksResult = await Trucks.findAll({
     include: [
       {
-        model: Trucks,
-        as: 'attachedTrailer',
-        attributes: ['id', 'license_plate'],
+        model: Drivers,
+        as: 'driver',
       },
       {
-        attributes: ['id'],
+        model: Trailers,
+        as: 'trailer',
+      },
+      {
         model: Containers,
-        as: 'truckContainers',
-        include: [
-          {
-            model: Volumes,
-            as: 'containerVolume',
-            attributes: ['id', 'value'],
-          },
-        ],
+        as: 'containers',
+        attributes: ['id', 'volume'],
       },
     ],
     order: [['id', 'DESC']],
   });
 
-  const formattedTrucks = trucks.map((truck) => {
-    const containers = truck.truckContainers
-      .map((container) => ({
-        id: container.id,
-        volumeId: container.containerVolume?.id,
-        volume: container.containerVolume?.value,
-      }))
-      .filter((c) => c.id && c.volumeId && c.volume);
-    return {
-      id: truck.id,
-      type: truck.type,
-      license_plate: truck.license_plate,
-      lastBatteryChangedAt: truck.last_battery_changed_at,
-      lastInspectedAt: truck.last_inspected_at,
-      trailer: truck.attachedTrailer,
-      containers,
-    };
-  });
+  const trucks = trucksResult.map((truck) => truck.get({ plain: true }));
 
   res.send({
     success: true,
     message: 'Fetched users data successfully',
-    data: formattedTrucks,
+    data: trucks,
   });
 });
 
 const createTruck = catchAsync(async (req, res) => {
-  const { type, licensePlate, lastBatteryChangedAt, lastInspectedAt, containers } = req.body;
-
-  if (type !== 'truck' && type !== 'trailer') {
-    return res.status(400).send({
-      success: false,
-      message: 'Invalid truck data',
-    });
-  }
+  const { driver_id, license_plate, last_battery_changed_at, last_inspected_at, containers } = req.body;
 
   if (!containers || containers.length === 0) {
     return res.status(400).send({
@@ -77,21 +47,14 @@ const createTruck = catchAsync(async (req, res) => {
     });
   }
 
-  if (type === 'truck' && !truckRegExp.test(licensePlate)) {
+  if (!truckRegExp.test(license_plate)) {
     return res.status(400).send({
       success: false,
       message: 'Invalid truck license plate format',
     });
   }
 
-  if (type === 'trailer' && !trailerRegExp.test(licensePlate)) {
-    return res.status(400).send({
-      success: false,
-      message: 'Invalid trailer license plate format',
-    });
-  }
-
-  const existingTruck = await Trucks.findOne({ where: { license_plate: licensePlate } });
+  const existingTruck = await Trucks.findOne({ where: { license_plate } });
   if (existingTruck) {
     return res.status(400).send({
       success: false,
@@ -100,16 +63,16 @@ const createTruck = catchAsync(async (req, res) => {
   }
 
   const truck = await Trucks.create({
-    type,
-    license_plate: licensePlate,
-    last_battery_changed_at: lastBatteryChangedAt,
-    last_inspected_at: lastInspectedAt,
+    driver_id,
+    license_plate,
+    last_battery_changed_at,
+    last_inspected_at,
   });
 
   const containerPromises = containers.map((container) =>
     Containers.create({
       truck_id: truck.id,
-      volume_id: container.volumeId,
+      volume: container.volume,
     })
   );
   await Promise.all(containerPromises);
@@ -123,14 +86,7 @@ const createTruck = catchAsync(async (req, res) => {
 
 const editTruck = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { type, licensePlate, lastBatteryChangedAt, lastInspectedAt, containers } = req.body;
-
-  if (type !== 'truck' && type !== 'trailer') {
-    return res.status(400).send({
-      success: false,
-      message: 'Invalid truck data',
-    });
-  }
+  const { driver_id, license_plate, last_battery_changed_at, last_inspected_at, containers } = req.body;
 
   if (!containers || containers.length === 0) {
     return res.status(400).send({
@@ -139,17 +95,10 @@ const editTruck = catchAsync(async (req, res) => {
     });
   }
 
-  if (type === 'truck' && !truckRegExp.test(licensePlate)) {
+  if (!truckRegExp.test(license_plate)) {
     return res.status(400).send({
       success: false,
       message: 'Invalid truck license plate format',
-    });
-  }
-
-  if (type === 'trailer' && !trailerRegExp.test(licensePlate)) {
-    return res.status(400).send({
-      success: false,
-      message: 'Invalid trailer license plate format',
     });
   }
 
@@ -161,7 +110,7 @@ const editTruck = catchAsync(async (req, res) => {
     });
   }
 
-  const existingTruck = await Trucks.findOne({ where: { license_plate: licensePlate, id: { [db.Sequelize.ne]: id } } });
+  const existingTruck = await Trucks.findOne({ where: { license_plate, id: { [db.Sequelize.Op.ne]: id } } });
   if (existingTruck) {
     return res.status(400).send({
       success: false,
@@ -169,17 +118,17 @@ const editTruck = catchAsync(async (req, res) => {
     });
   }
 
-  truck.type = type;
-  truck.license_plate = licensePlate;
-  truck.last_battery_changed_at = lastBatteryChangedAt;
-  truck.last_inspected_at = lastInspectedAt;
+  truck.driver_id = driver_id;
+  truck.license_plate = license_plate;
+  truck.last_battery_changed_at = last_battery_changed_at;
+  truck.last_inspected_at = last_inspected_at;
   await truck.save();
 
   await Containers.destroy({ where: { truck_id: id } });
   const containerPromises = containers.map((container) =>
     Containers.create({
       truck_id: id,
-      volume_id: container.volumeId,
+      volume: container.volume,
     })
   );
   await Promise.all(containerPromises);

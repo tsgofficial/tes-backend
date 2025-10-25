@@ -21,8 +21,8 @@ db.sequelize = sequelize;
 
 db.users = require('./users.model')(sequelize, Sequelize);
 db.trucks = require('./trucks.model')(sequelize, Sequelize);
-db.volumes = require('./volumes.model')(sequelize, Sequelize);
 db.drivers = require('./drivers.model')(sequelize, Sequelize);
+db.trailers = require('./trailers.model')(sequelize, Sequelize);
 db.containers = require('./containers.model')(sequelize, Sequelize);
 db.fuel_locations = require('./fuel_locations.model')(sequelize, Sequelize);
 db.fuel_types = require('./fuel_types.model')(sequelize, Sequelize);

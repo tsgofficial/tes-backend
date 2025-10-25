@@ -12,11 +12,6 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING(7),
         allowNull: true,
       },
-      type: {
-        type: DataTypes.ENUM('truck', 'trailer'),
-        allowNull: true,
-        defaultValue: 'truck',
-      },
       tire_wear: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -29,7 +24,7 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.DATEONLY,
         allowNull: true,
       },
-      trailer_id: {
+      driver_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: true,
       },
@@ -52,31 +47,23 @@ module.exports = function (sequelize, DataTypes) {
   Trucks.associate = function (models) {
     Trucks.hasMany(models.containers, {
       foreignKey: 'truck_id',
-      as: 'truckContainers',
+      as: 'containers',
     });
     Trucks.hasMany(models.deliveries, {
       foreignKey: 'truck_id',
-      as: 'truckDeliveries',
+      as: 'deliveries',
     });
     Trucks.hasMany(models.delivery_details, {
       foreignKey: 'truck_id',
-      as: 'truckDeliveryDetails',
+      as: 'deliveryDetails',
     });
-    // Trucks.belongsTo(models.drivers, {
-    //   foreignKey: 'truck_id',
-    //   as: 'truckDriver',
-    // });
-
-    Trucks.belongsTo(Trucks, {
-      foreignKey: 'trailer_id',
-      sourceKey: 'id',
-      as: 'trailerTruck', // This is the truck that acts as the trailer.
+    Trucks.belongsTo(models.drivers, {
+      foreignKey: 'driver_id',
+      as: 'driver',
     });
-
-    Trucks.hasOne(Trucks, {
-      foreignKey: 'id',
-      targetKey: 'trailer_id',
-      as: 'attachedTrailer', // This is the trailer attached to the truck.
+    Trucks.hasOne(models.trailers, {
+      foreignKey: 'truck_id',
+      as: 'trailer',
     });
   };
 

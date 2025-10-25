@@ -3,20 +3,26 @@ const catchAsync = require('../utils/catchAsync');
 
 const Trucks = db.trucks;
 const Drivers = db.drivers;
+const Trailers = db.trailers;
 
 const getDrivers = catchAsync(async (req, res) => {
-  const drivers = await Drivers.findAll({
+  const driversResult = await Drivers.findAll({
     order: [['id', 'DESC']],
     include: [
       {
         model: Trucks,
         as: 'truck',
-        attributes: ['id', 'type', 'license_plate'],
+        include: [
+          {
+            model: Trailers,
+            as: 'trailer',
+          },
+        ],
       },
     ],
-    raw: true,
-    nest: true,
   });
+
+  const drivers = driversResult.map((driver) => driver.get({ plain: true }));
 
   res.send({
     success: true,

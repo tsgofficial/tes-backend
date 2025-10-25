@@ -12,7 +12,11 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      volume_id: {
+      trailer_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      volume: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -37,9 +41,9 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'truck_id',
       as: 'containerTruck',
     });
-    Containers.belongsTo(models.volumes, {
-      foreignKey: 'volume_id',
-      as: 'containerVolume',
+    Containers.belongsTo(models.trailers, {
+      foreignKey: 'trailer_id',
+      as: 'containerTrailer',
     });
   };
 

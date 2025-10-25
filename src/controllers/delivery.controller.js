@@ -2,7 +2,6 @@ const db = require('../models');
 const catchAsync = require('../utils/catchAsync');
 
 const Trucks = db.trucks;
-const Volumes = db.volumes;
 const Drivers = db.drivers;
 const DeliveryDetails = db.delivery_details;
 const FuelTypes = db.fuel_types;
@@ -50,13 +49,6 @@ const getDeliveries = catchAsync(async (req, res) => {
             model: Containers,
             as: 'container',
             attributes: ['id'],
-            include: [
-              {
-                model: Volumes,
-                as: 'containerVolume',
-                attributes: ['value'],
-              },
-            ],
           },
         ],
       },
@@ -393,7 +385,7 @@ const receiveDelivery = catchAsync(async (req, res) => {
         return DeliveryDetails.update(
           { density },
           {
-            where: { id: detailId, delivery_id: id },
+            where: { id: detailId },
           }
         );
       });

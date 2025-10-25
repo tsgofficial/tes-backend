@@ -4,7 +4,6 @@ const catchAsync = require('../utils/catchAsync');
 
 // Import models for better code organization
 const {
-  volumes: Volumes,
   delivery_details: DeliveryDetails,
   fuel_types: FuelTypes,
   deliveries: Deliveries,
@@ -103,13 +102,6 @@ const getReport = catchAsync(async (req, res) => {
             {
               model: Containers,
               as: 'container',
-              include: [
-                {
-                  model: Volumes,
-                  as: 'containerVolume',
-                  attributes: ['id', 'value'],
-                },
-              ],
             },
             {
               model: Trucks,
@@ -222,7 +214,6 @@ const getReport = catchAsync(async (req, res) => {
         // Create fuel detail object
         const fuelDetail = {
           containerId: detail.container_id,
-          volumeId: detail.container?.volume_id,
           volume,
           density,
           fuelTypeId,

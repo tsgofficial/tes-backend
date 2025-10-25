@@ -1,6 +1,6 @@
 module.exports = function (sequelize, DataTypes) {
-  const Volumes = sequelize.define(
-    'volumes',
+  const Trailers = sequelize.define(
+    'trailers',
     {
       id: {
         autoIncrement: true,
@@ -8,14 +8,18 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
         primaryKey: true,
       },
-      value: {
+      license_plate: {
+        type: DataTypes.STRING(6),
+        allowNull: true,
+      },
+      truck_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
     },
     {
       sequelize,
-      tableName: 'volumes',
+      tableName: 'trailers',
       timestamps: false,
       indexes: [
         {
@@ -28,12 +32,16 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  Volumes.associate = function (models) {
-    Volumes.hasMany(models.containers, {
-      foreignKey: 'volume_id',
-      as: 'volumeContainers',
+  Trailers.associate = function (models) {
+    Trailers.belongsTo(models.trucks, {
+      foreignKey: 'truck_id',
+      as: 'truck',
+    });
+    Trailers.hasMany(models.containers, {
+      foreignKey: 'trailer_id',
+      as: 'containers',
     });
   };
 
-  return Volumes;
+  return Trailers;
 };
