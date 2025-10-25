@@ -173,6 +173,7 @@ const getReport = catchAsync(async (req, res) => {
       const outboundDistance = delivery.outboundDistance?.distance || 0;
       const returnDistance = delivery.returnDistance?.distance || 0;
       const deliveryTotalDistance = outboundDistance + returnDistance;
+      const deliveryAverageDistance = deliveryTotalDistance / 2;
 
       // Add to total distances
       totalDistance += deliveryTotalDistance;
@@ -197,7 +198,7 @@ const getReport = catchAsync(async (req, res) => {
         deliveryTotalMass += mass;
 
         // Calculate ton-km (mass in tons * distance in km)
-        const tonKm = (mass / 1000) * deliveryTotalDistance;
+        const tonKm = (mass * deliveryAverageDistance) / 1000;
         totalTonKm += tonKm;
 
         // Aggregate fuel types
@@ -280,7 +281,7 @@ const getReport = catchAsync(async (req, res) => {
       });
 
       // Calculate ton-km for this delivery
-      const deliveryTonKm = (deliveryTotalMass / 1000) * deliveryTotalDistance;
+      const deliveryTonKm = (deliveryTotalMass * deliveryAverageDistance) / 1000;
 
       return {
         date: delivery.date ? new Date(delivery.date).toISOString().split('T')[0] : null,
