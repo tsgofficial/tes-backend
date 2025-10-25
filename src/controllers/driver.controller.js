@@ -5,6 +5,8 @@ const Trucks = db.trucks;
 const Drivers = db.drivers;
 const Trailers = db.trailers;
 
+const registerRegExp = /^[А-ЯӨҮЁ]{2}\d{8}$/;
+
 const getDrivers = catchAsync(async (req, res) => {
   const driversResult = await Drivers.findAll({
     order: [['id', 'DESC']],
@@ -34,6 +36,21 @@ const getDrivers = catchAsync(async (req, res) => {
 const createDriver = catchAsync(async (req, res) => {
   const { firstname, lastname, position, register, phone } = req.body;
 
+  if (!registerRegExp.test(register)) {
+    return res.status(400).send({
+      success: false,
+      message: 'Invalid register format for driver',
+    });
+  }
+
+  const existingDriver = await Drivers.findOne({ where: { register } });
+  if (existingDriver) {
+    return res.status(400).send({
+      success: false,
+      message: 'Driver with this register already exists',
+    });
+  }
+
   const driver = await Drivers.create({ firstname, lastname, position, register, phone });
 
   res.send({
@@ -46,6 +63,23 @@ const createDriver = catchAsync(async (req, res) => {
 const editDriver = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { firstname, lastname, position, register, phone } = req.body;
+
+  if (!registerRegExp.test(register)) {
+    return res.status(400).send({
+      success: false,
+      message: 'Invalid register format for driver',
+    });
+  }
+
+  const existingDriver = await Drivers.findOne({
+    where: { register, id: { [db.Sequelize.Op.ne]: id } },
+  });
+  if (existingDriver) {
+    return res.status(400).send({
+      success: false,
+      message: 'Another driver with this register already exists',
+    });
+  }
 
   const driver = await Drivers.findByPk(id);
   if (!driver) {

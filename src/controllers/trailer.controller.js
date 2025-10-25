@@ -6,7 +6,7 @@ const Drivers = db.drivers;
 const Trailers = db.trailers;
 const Containers = db.containers;
 
-const trailerRegExp = /^\d{4}[А-Яа-яӨөҮү]{2}$/;
+const trailerRegExp = /^\d{4}[А-ЯӨҮЁ]{2}$/;
 
 const getTrailers = catchAsync(async (req, res) => {
   const trailersResult = await Trailers.findAll({

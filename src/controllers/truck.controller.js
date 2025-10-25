@@ -6,7 +6,7 @@ const Drivers = db.drivers;
 const Trailers = db.trailers;
 const Containers = db.containers;
 
-const truckRegExp = /^\d{4}[А-Яа-яӨөҮү]{3}$/;
+const truckRegExp = /^\d{4}[А-ЯӨҮЁ]{3}$/;
 
 const getTrucks = catchAsync(async (req, res) => {
   const trucksResult = await Trucks.findAll({
