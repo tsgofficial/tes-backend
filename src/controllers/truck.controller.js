@@ -69,23 +69,27 @@ const createTruck = catchAsync(async (req, res) => {
     last_inspected_at,
   });
 
-  const containerPromises = containers.map((container) =>
-    Containers.create({
+  const createdContainers = await Containers.bulkCreate(
+    containers.map((container) => ({
       truck_id: truck.id,
       volume: container.volume,
-    })
+    }))
   );
-  await Promise.all(containerPromises);
 
   res.send({
     success: true,
     message: 'Truck created successfully',
-    data: truck,
+    data: {
+      ...truck.get({ plain: true }),
+      containers: createdContainers,
+    },
   });
 });
 
 const editTruck = catchAsync(async (req, res) => {
   const { id } = req.params;
+  const truckId = Number(id);
+
   const { driver_id, license_plate, last_battery_changed_at, last_inspected_at, containers } = req.body;
 
   if (!containers || containers.length === 0) {
@@ -102,7 +106,7 @@ const editTruck = catchAsync(async (req, res) => {
     });
   }
 
-  const truck = await Trucks.findByPk(id);
+  const truck = await Trucks.findByPk(truckId);
   if (!truck) {
     return res.status(404).send({
       success: false,
@@ -110,7 +114,7 @@ const editTruck = catchAsync(async (req, res) => {
     });
   }
 
-  const existingTruck = await Trucks.findOne({ where: { license_plate, id: { [db.Sequelize.Op.ne]: id } } });
+  const existingTruck = await Trucks.findOne({ where: { license_plate, id: { [db.Sequelize.Op.ne]: truckId } } });
   if (existingTruck) {
     return res.status(400).send({
       success: false,
@@ -124,19 +128,21 @@ const editTruck = catchAsync(async (req, res) => {
   truck.last_inspected_at = last_inspected_at;
   await truck.save();
 
-  await Containers.destroy({ where: { truck_id: id } });
-  const containerPromises = containers.map((container) =>
-    Containers.create({
-      truck_id: id,
+  await Containers.destroy({ where: { truck_id: truckId } });
+  const createdContainers = await Containers.bulkCreate(
+    containers.map((container) => ({
+      truck_id: truckId,
       volume: container.volume,
-    })
+    }))
   );
-  await Promise.all(containerPromises);
 
   res.send({
     success: true,
     message: 'Truck updated successfully',
-    data: truck,
+    data: {
+      ...truck.get({ plain: true }),
+      containers: createdContainers,
+    },
   });
 });
 

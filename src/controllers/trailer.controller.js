@@ -57,33 +57,32 @@ const createTrailer = catchAsync(async (req, res) => {
     });
   }
 
-  const newTrailer = await Trailers.create({
+  const trailer = await Trailers.create({
     license_plate,
     truck_id,
   });
 
-  const containerPromises = containers.map((container) =>
-    Containers.create({
-      trailer_id: newTrailer.id,
+  const createdContainers = await Containers.bulkCreate(
+    containers.map((container) => ({
+      trailer_id: trailer.id,
       volume: container.volume,
-    })
+    }))
   );
-  await Promise.all(containerPromises);
 
   res.send({
     success: true,
     message: 'Trailer created successfully',
     data: {
-      id: newTrailer.id,
-      license_plate: newTrailer.license_plate,
-      lastInspectedAt: newTrailer.last_inspected_at,
-      containers: containers.map((container) => ({ volume: container.volume })),
+      ...trailer.get({ plain: true }),
+      containers: createdContainers,
     },
   });
 });
 
 const editTrailer = catchAsync(async (req, res) => {
   const { id } = req.params;
+  const trailerId = Number(id);
+
   const { license_plate, truck_id, containers } = req.body;
 
   if (!trailerRegExp.test(license_plate)) {
@@ -94,7 +93,7 @@ const editTrailer = catchAsync(async (req, res) => {
   }
 
   const existingTrailer = await Trailers.findOne({
-    where: { license_plate, id: { [db.Sequelize.Op.ne]: id } },
+    where: { license_plate, id: { [db.Sequelize.Op.ne]: trailerId } },
   });
   if (existingTrailer) {
     return res.status(400).send({
@@ -103,7 +102,7 @@ const editTrailer = catchAsync(async (req, res) => {
     });
   }
 
-  const trailer = await Trailers.findByPk(id);
+  const trailer = await Trailers.findByPk(trailerId);
   if (!trailer) {
     return res.status(404).send({
       success: false,
@@ -115,18 +114,21 @@ const editTrailer = catchAsync(async (req, res) => {
   trailer.license_plate = license_plate;
   await trailer.save();
 
-  await Containers.destroy({ where: { trailer_id: id } });
-  const containerPromises = containers.map((container) =>
-    Containers.create({
-      trailer_id: id,
+  await Containers.destroy({ where: { trailer_id: trailerId } });
+  const createdContainers = await Containers.bulkCreate(
+    containers.map((container) => ({
+      trailer_id: trailerId,
       volume: container.volume,
-    })
+    }))
   );
-  await Promise.all(containerPromises);
 
   res.send({
     success: true,
     message: 'Trailer updated successfully',
+    data: {
+      ...trailer.get({ plain: true }),
+      containers: createdContainers,
+    },
   });
 });
 
