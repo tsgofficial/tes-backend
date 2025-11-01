@@ -317,7 +317,13 @@ const getReport = catchAsync(async (req, res) => {
         //   trucks: Array.from(trucksMap.values()),
         //   trailers: Array.from(trailersMap.values()),
         // },
-        details: Array.from(eachFuelTypeMap.values()),
+        details: Array.from(eachFuelTypeMap.values()).map((ft) => ({
+          id: ft.id,
+          name: ft.name,
+          mass: Math.round(ft.mass * 100) / 100,
+          volume: Math.round(ft.volume * 100) / 100,
+          averageDensity: Math.round(ft.averageDensity * 1000) / 1000, // Round to 3 decimal places
+        })),
       };
     });
 

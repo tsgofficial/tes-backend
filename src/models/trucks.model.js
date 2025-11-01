@@ -24,7 +24,7 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.DATEONLY,
         allowNull: true,
       },
-      driver_id: {
+      trailer_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: true,
       },
@@ -57,12 +57,12 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'truck_id',
       as: 'deliveryDetails',
     });
-    Trucks.belongsTo(models.drivers, {
-      foreignKey: 'driver_id',
+    Trucks.hasOne(models.drivers, {
+      foreignKey: 'truck_id',
       as: 'driver',
     });
-    Trucks.hasOne(models.trailers, {
-      foreignKey: 'truck_id',
+    Trucks.belongsTo(models.trailers, {
+      foreignKey: 'trailer_id',
       as: 'trailer',
     });
   };

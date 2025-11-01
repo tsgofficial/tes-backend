@@ -63,7 +63,7 @@ const createTruck = catchAsync(async (req, res) => {
   }
 
   const truck = await Trucks.create({
-    driver_id,
+    trailer_id,
     license_plate,
     last_battery_changed_at,
     last_inspected_at,
@@ -76,13 +76,19 @@ const createTruck = catchAsync(async (req, res) => {
     }))
   );
 
-  if (trailer_id) {
-    const trailer = await Trailers.findByPk(trailer_id);
+  let driver = null;
+  if (driver_id) {
+    driver = await Drivers.findByPk(driver_id);
 
-    if (trailer) {
-      trailer.truck_id = truck.id;
-      trailer.save();
+    if (driver) {
+      driver.truck_id = truck.id;
+      driver.save();
     }
+  }
+
+  let trailer = null;
+  if (trailer_id) {
+    trailer = await Trailers.findByPk(trailer_id);
   }
 
   res.send({
@@ -90,6 +96,8 @@ const createTruck = catchAsync(async (req, res) => {
     message: 'Truck created successfully',
     data: {
       ...truck.get({ plain: true }),
+      driver: driver ? driver.get({ plain: true }) : null,
+      trailer: trailer ? trailer.get({ plain: true }) : null,
       containers: createdContainers,
     },
   });
@@ -131,7 +139,7 @@ const editTruck = catchAsync(async (req, res) => {
     });
   }
 
-  truck.driver_id = driver_id;
+  truck.trailer_id = trailer_id;
   truck.license_plate = license_plate;
   truck.last_battery_changed_at = last_battery_changed_at;
   truck.last_inspected_at = last_inspected_at;
@@ -145,13 +153,19 @@ const editTruck = catchAsync(async (req, res) => {
     }))
   );
 
-  if (trailer_id) {
-    const trailer = await Trailers.findByPk(trailer_id);
+  let driver = null;
+  if (driver_id) {
+    driver = await Drivers.findByPk(driver_id);
 
-    if (trailer) {
-      trailer.truck_id = truck.id;
-      trailer.save();
+    if (driver) {
+      driver.truck_id = truck.id;
+      driver.save();
     }
+  }
+
+  let trailer = null;
+  if (trailer_id) {
+    trailer = await Trailers.findByPk(trailer_id);
   }
 
   res.send({
@@ -159,6 +173,8 @@ const editTruck = catchAsync(async (req, res) => {
     message: 'Truck updated successfully',
     data: {
       ...truck.get({ plain: true }),
+      driver: driver ? driver.get({ plain: true }) : null,
+      trailer: trailer ? trailer.get({ plain: true }) : null,
       containers: createdContainers,
     },
   });

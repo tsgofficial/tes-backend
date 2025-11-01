@@ -12,10 +12,6 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING(6),
         allowNull: true,
       },
-      truck_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
     },
     {
       sequelize,
@@ -41,8 +37,8 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'trailer_id',
       as: 'deliveryDetails',
     });
-    Trailers.belongsTo(models.trucks, {
-      foreignKey: 'truck_id',
+    Trailers.hasOne(models.trucks, {
+      foreignKey: 'trailer_id',
       as: 'truck',
     });
     Trailers.hasMany(models.containers, {

@@ -129,7 +129,7 @@ const createDelivery = catchAsync(async (req, res) => {
   }
 
   if (trailer) {
-    const existingTrailers = await Trucks.findByPk(trailer.id, {
+    const existingTrailers = await Trailers.findByPk(trailer.id, {
       include: [{ model: Containers, as: 'containers' }],
     });
 
@@ -137,6 +137,7 @@ const createDelivery = catchAsync(async (req, res) => {
     const givenTrailerContainerIds = trailer.fuelDetails.map((detail) => detail.containerId);
 
     const allValidTrailerContainers = givenTrailerContainerIds.every((id) => trailerContainerIds.includes(id));
+
     if (!allValidTrailerContainers) {
       return res.status(400).send({
         success: false,
@@ -211,7 +212,7 @@ const editDelivery = catchAsync(async (req, res) => {
   }
 
   if (trailer) {
-    const existingTrailers = await Trucks.findByPk(trailer.id, { include: [{ model: Containers, as: 'containers' }] });
+    const existingTrailers = await Trailers.findByPk(trailer.id, { include: [{ model: Containers, as: 'containers' }] });
 
     const trailerContainerIds = existingTrailers.containers.map((container) => container.id);
     const givenTrailerContainerIds = trailer.fuelDetails.map((detail) => detail.containerId);
