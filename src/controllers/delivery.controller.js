@@ -74,6 +74,7 @@ const getDeliveries = catchAsync(async (req, res) => {
     driver: delivery.driver,
     fromLocation: delivery.fromLocation,
     toLocation: delivery.toLocation,
+    is_received: delivery.is_received === 1,
     truck: {
       id: delivery.truck_id,
       licensePlate: delivery.truck?.license_plate || '',
@@ -303,13 +304,35 @@ const receiveDelivery = catchAsync(async (req, res) => {
 
   const { outboundDistanceId, returnDistanceId, densityDetails } = req.body;
 
-  const delivery = await Deliveries.findByPk(id);
+  if (!densityDetails || densityDetails.length === 0) {
+    return res.status(400).send({
+      success: false,
+      message: 'Density details are required',
+    });
+  }
+
+  const delivery = await Deliveries.findByPk(id, {
+    include: [{ model: DeliveryDetails, as: 'deliveryDetails' }],
+  });
   if (!delivery) {
     return res.status(404).send({
       success: false,
       message: 'Delivery not found',
     });
   }
+
+  const deliveryDetailsIds = delivery.deliveryDetails.map((detail) => detail.id);
+  const givenDetailIds = densityDetails.map((d) => d.detailId);
+
+  const allValidDetails = givenDetailIds.every((detailId) => deliveryDetailsIds.includes(detailId));
+  if (deliveryDetailsIds.length !== givenDetailIds.length || !allValidDetails) {
+    return res.status(400).send({
+      success: false,
+      message: 'One or more delivery detail IDs are invalid for this delivery',
+    });
+  }
+
+  delivery.is_received = 1;
 
   if (!delivery.received_by) {
     delivery.received_by = userId;
@@ -323,30 +346,29 @@ const receiveDelivery = catchAsync(async (req, res) => {
   if (returnDistanceId) {
     delivery.return_distance_id = returnDistanceId;
   }
-  if (densityDetails && densityDetails.length > 0) {
-    const densityValues = densityDetails.map((d) => d.density);
-    if (densityValues.some((d) => !d || d <= 0 || d > 1)) {
-      return res.status(400).send({
-        success: false,
-        message: 'Density values must be greater between 0 and 1',
-      });
-    }
 
-    const densityUpdatePromises = densityDetails
-      .filter((densityDetail) => densityDetail && densityDetail.detailId) // Filter out invalid entries
-      .map((densityDetail) => {
-        const { detailId, density } = densityDetail;
-        return DeliveryDetails.update(
-          { density },
-          {
-            where: { id: detailId },
-          }
-        );
-      });
+  const densityValues = densityDetails.map((d) => d.density);
+  if (densityValues.some((d) => !d || d <= 0 || d > 1)) {
+    return res.status(400).send({
+      success: false,
+      message: 'Density values must be greater between 0 and 1',
+    });
+  }
 
-    if (densityUpdatePromises.length > 0) {
-      await Promise.all(densityUpdatePromises);
-    }
+  const densityUpdatePromises = densityDetails
+    .filter((densityDetail) => densityDetail && densityDetail.detailId) // Filter out invalid entries
+    .map((densityDetail) => {
+      const { detailId, density } = densityDetail;
+      return DeliveryDetails.update(
+        { density },
+        {
+          where: { id: detailId },
+        }
+      );
+    });
+
+  if (densityUpdatePromises.length > 0) {
+    await Promise.all(densityUpdatePromises);
   }
   await delivery.save();
 
