@@ -11,7 +11,18 @@ const Containers = db.containers;
 const FuelLocations = db.fuel_locations;
 
 const getDeliveries = catchAsync(async (req, res) => {
+  const { startDate, endDate } = req.query;
+
   const deliveries = await Deliveries.findAll({
+    where: {
+      ...(startDate && endDate
+        ? {
+            date: {
+              [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)],
+            },
+          }
+        : {}),
+    },
     include: [
       {
         model: Drivers,
