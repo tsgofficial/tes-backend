@@ -83,6 +83,7 @@ const getDeliveries = catchAsync(async (req, res) => {
         .filter((log) => log.truck_id === delivery.truck_id)
         .map((log) => ({
           id: log.id,
+          density: log.density,
           fuelType: log.fuelType.name,
           fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
@@ -96,6 +97,7 @@ const getDeliveries = catchAsync(async (req, res) => {
         .filter((log) => log.trailer_id === delivery.trailer_id)
         .map((log) => ({
           id: log.id,
+          density: log.density,
           fuelType: log.fuelType.name,
           fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
