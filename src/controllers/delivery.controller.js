@@ -11,7 +11,7 @@ const Containers = db.containers;
 const FuelLocations = db.fuel_locations;
 
 const getDeliveries = catchAsync(async (req, res) => {
-  const { startDate, endDate } = req.query;
+  const { startDate, endDate, is_received } = req.query;
 
   const deliveries = await Deliveries.findAll({
     where: {
@@ -22,6 +22,7 @@ const getDeliveries = catchAsync(async (req, res) => {
             },
           }
         : {}),
+      ...(is_received !== undefined ? { is_received } : {}),
     },
     include: [
       {
