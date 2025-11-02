@@ -153,6 +153,8 @@ const editTruck = catchAsync(async (req, res) => {
     }))
   );
 
+  await Drivers.update({ truck_id: null }, { where: { truck_id: truckId } });
+
   let driver = null;
   if (driver_id) {
     driver = await Drivers.findByPk(driver_id);
