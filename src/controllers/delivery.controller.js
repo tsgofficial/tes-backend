@@ -336,7 +336,7 @@ const receiveDelivery = catchAsync(async (req, res) => {
   delivery.is_received = 1;
 
   if (!delivery.received_by) {
-    delivery.received_by = userId;
+    delivery.received_by = userId ?? null;
   }
   if (!delivery.received_datetime) {
     delivery.received_datetime = new Date();
@@ -371,7 +371,10 @@ const receiveDelivery = catchAsync(async (req, res) => {
   if (densityUpdatePromises.length > 0) {
     await Promise.all(densityUpdatePromises);
   }
-  await delivery.save();
+
+  if (delivery.changed() !== false) {
+    await delivery.save();
+  }
 
   res.send({
     success: true,
