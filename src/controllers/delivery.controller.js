@@ -53,11 +53,6 @@ const getDeliveries = catchAsync(async (req, res) => {
         as: 'deliveryDetails',
         include: [
           {
-            model: Trucks,
-            as: 'truck',
-            attributes: ['id', 'license_plate'],
-          },
-          {
             model: FuelTypes,
             as: 'fuelType',
             attributes: ['id', 'name'],
@@ -65,7 +60,7 @@ const getDeliveries = catchAsync(async (req, res) => {
           {
             model: Containers,
             as: 'container',
-            attributes: ['id'],
+            attributes: ['id', 'volume'],
           },
         ],
       },
@@ -89,7 +84,7 @@ const getDeliveries = catchAsync(async (req, res) => {
           fuelType: log.fuelType.name,
           fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
-          deliveryType: log.delivery_type,
+          containerId: log.container.id,
         })),
     },
     trailers: {
@@ -102,7 +97,7 @@ const getDeliveries = catchAsync(async (req, res) => {
           fuelType: log.fuelType.name,
           fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
-          deliveryType: log.delivery_type,
+          containerId: log.container.id,
         })),
     },
   }));
