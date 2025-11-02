@@ -6,6 +6,7 @@ const trucks = require('./truck.route');
 const drivers = require('./driver.route');
 const trailers = require('./trailer.route');
 const deliveries = require('./delivery.route');
+const fuelTypes = require('./fuel_type.route');
 const fuelLocations = require('./fuel_location.route');
 const fuelLocationDistances = require('./fuel_location_distance.route');
 
@@ -49,6 +50,10 @@ const adminRoutes = [
   {
     path: '/report',
     route: report,
+  },
+  {
+    path: '/fuel-types',
+    route: fuelTypes,
   },
   {
     path: '/fuel-location-distances',
