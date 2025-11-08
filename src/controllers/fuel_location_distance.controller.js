@@ -28,7 +28,7 @@ const getFuelLocationDistances = catchAsync(async (req, res) => {
         attributes: ['id', 'name', 'latitude', 'longitude'],
       },
     ],
-    order: [['id', 'DESC']],
+    order: [['distance', 'ASC']],
   });
 
   res.send({
