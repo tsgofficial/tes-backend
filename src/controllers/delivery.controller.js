@@ -128,7 +128,7 @@ const createDelivery = catchAsync(async (req, res) => {
   const existingTruck = await Trucks.findByPk(truckId, { include: [{ model: Containers, as: 'containers' }] });
 
   const truckContainerIds = existingTruck.containers.map((container) => container.id);
-  const givenContainerIds = fuelDetails.map((detail) => detail.containerId);
+  const givenContainerIds = fuelDetails?.map((detail) => detail.containerId) ?? [];
 
   const allValidContainers = givenContainerIds.every((id) => truckContainerIds.includes(id));
   if (!allValidContainers) {
@@ -144,7 +144,7 @@ const createDelivery = catchAsync(async (req, res) => {
     });
 
     const trailerContainerIds = existingTrailers.containers.map((container) => container.id);
-    const givenTrailerContainerIds = trailer.fuelDetails.map((detail) => detail.containerId);
+    const givenTrailerContainerIds = trailer.fuelDetails?.map((detail) => detail.containerId) ?? [];
 
     const allValidTrailerContainers = givenTrailerContainerIds.every((id) => trailerContainerIds.includes(id));
 
@@ -201,7 +201,7 @@ const editDelivery = catchAsync(async (req, res) => {
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!date || !driverId || !truckId || (fuelDetails?.length ?? 0) === 0) {
+  if (!date || !driverId || !truckId) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
@@ -211,7 +211,7 @@ const editDelivery = catchAsync(async (req, res) => {
   const existingTruck = await Trucks.findByPk(truckId, { include: [{ model: Containers, as: 'containers' }] });
 
   const truckContainerIds = existingTruck.containers.map((container) => container.id);
-  const givenContainerIds = fuelDetails.map((detail) => detail.containerId);
+  const givenContainerIds = fuelDetails?.map((detail) => detail.containerId) ?? [];
 
   const allValidContainers = givenContainerIds.every((id) => truckContainerIds.includes(id));
   if (!allValidContainers) {
@@ -225,7 +225,7 @@ const editDelivery = catchAsync(async (req, res) => {
     const existingTrailers = await Trailers.findByPk(trailer.id, { include: [{ model: Containers, as: 'containers' }] });
 
     const trailerContainerIds = existingTrailers.containers.map((container) => container.id);
-    const givenTrailerContainerIds = trailer.fuelDetails.map((detail) => detail.containerId);
+    const givenTrailerContainerIds = trailer.fuelDetails?.map((detail) => detail.containerId) ?? [];
 
     const allValidTrailerContainers = givenTrailerContainerIds.every((id) => trailerContainerIds.includes(id));
     if (!allValidTrailerContainers) {
