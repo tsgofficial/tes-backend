@@ -4,7 +4,15 @@ const catchAsync = require('../utils/catchAsync');
 const FuelLocations = db.fuel_locations;
 
 const getFuelLocations = catchAsync(async (req, res) => {
+  const { type } = req.query;
+
+  const whereClause = {};
+  if (type === 'from' || type === 'to') {
+    whereClause.type = type;
+  }
+
   const fuelLocations = await FuelLocations.findAll({
+    where: whereClause,
     order: [['id', 'DESC']],
   });
 

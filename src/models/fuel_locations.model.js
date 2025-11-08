@@ -28,6 +28,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
+      type: {
+        type: DataTypes.ENUM('from', 'to'),
+        allowNull: true,
+      },
     },
     {
       sequelize,
