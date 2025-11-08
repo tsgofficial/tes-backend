@@ -9,7 +9,7 @@ const registerRegExp = /^[А-ЯӨҮЁ]{2}\d{8}$/;
 
 const getDrivers = catchAsync(async (req, res) => {
   const driversResult = await Drivers.findAll({
-    order: [['id', 'DESC']],
+    order: [['firstname', 'ASC']],
     include: [
       {
         model: Trucks,
