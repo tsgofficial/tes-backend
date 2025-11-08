@@ -118,7 +118,7 @@ const createDelivery = catchAsync(async (req, res) => {
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!date || !driverId || !fromLocationId || !toLocationId || !truckId || (fuelDetails?.length ?? 0) === 0) {
+  if (!date || !driverId || !fromLocationId || !toLocationId || !truckId) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
