@@ -11,7 +11,12 @@ const getFuelLocations = catchAsync(async (req, res) => {
   res.send({
     success: true,
     message: 'Fetched fuel locations successfully',
-    data: fuelLocations,
+    data: fuelLocations
+      .map((location) => location.get({ plain: true }))
+      .map((location) => ({
+        ...location,
+        locationName: `${location.location} ${location.district ? `(${location.district})` : ''}`,
+      })),
   });
 });
 

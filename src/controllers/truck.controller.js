@@ -18,6 +18,13 @@ const getTrucks = catchAsync(async (req, res) => {
       {
         model: Trailers,
         as: 'trailer',
+        include: [
+          {
+            model: Containers,
+            as: 'containers',
+            attributes: ['id', 'volume'],
+          },
+        ],
       },
       {
         model: Containers,
@@ -28,7 +35,18 @@ const getTrucks = catchAsync(async (req, res) => {
     order: [['id', 'DESC']],
   });
 
-  const trucks = trucksResult.map((truck) => truck.get({ plain: true }));
+  const trucks = trucksResult
+    .map((truck) => truck.get({ plain: true }))
+    .map((truck) => {
+      const totalVolume = truck.containers.reduce((sum, container) => sum + container.volume, 0);
+      const totalTrailerVolume = truck?.trailer?.containers?.reduce((sum, container) => sum + container.volume, 0);
+
+      return {
+        ...truck,
+        trailer: { ...truck.trailer, totalVolume: totalTrailerVolume },
+        totalVolume,
+      };
+    });
 
   res.send({
     success: true,

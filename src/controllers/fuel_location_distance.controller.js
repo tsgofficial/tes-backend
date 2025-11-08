@@ -38,7 +38,7 @@ const getFuelLocationDistances = catchAsync(async (req, res) => {
       .map((fld) => fld.get({ plain: true }))
       .map((fld) => ({
         ...fld,
-        name: `${fld.location1.name} - ${fld.location2.name} (${fld.name})`,
+        locationDistanceName: `${fld.location1.name} - ${fld.location2.name} ${fld.name ? `(${fld.name})` : ''}`,
       })),
   });
 });
