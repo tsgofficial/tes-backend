@@ -20,6 +20,14 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.FLOAT,
         allowNull: true,
       },
+      location: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      district: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
     },
     {
       sequelize,
