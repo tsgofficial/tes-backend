@@ -34,7 +34,12 @@ const getFuelLocationDistances = catchAsync(async (req, res) => {
   res.send({
     success: true,
     message: 'Fetched fuel location distances successfully',
-    data: fuelLocationDistances,
+    data: fuelLocationDistances
+      .map((fld) => fld.get({ plain: true }))
+      .map((fld) => ({
+        ...fld,
+        name: `${fld.location1.name} - ${fld.location2.name} (${fld.name})`,
+      })),
   });
 });
 
