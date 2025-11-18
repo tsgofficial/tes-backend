@@ -8,15 +8,11 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
         primaryKey: true,
       },
-      date: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      driver_id: {
+      daily_delivery_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      truck_id: {
+      driver_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -28,30 +24,14 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      to_location_id: {
+      from_distance_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      received_by: {
-        type: DataTypes.INTEGER,
+      manager_status: {
+        type: DataTypes.ENUM('need_service', 'loaded', 'change_location', 'driver_rejected', 'load_time_uncertain'),
         allowNull: true,
-      },
-      received_datetime: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      outbound_distance_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      return_distance_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      is_received: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
+        defaultValue: 'load_time_uncertain',
       },
     },
     {
@@ -70,10 +50,6 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Deliveries.associate = (models) => {
-    Deliveries.belongsTo(models.trucks, {
-      foreignKey: 'truck_id',
-      as: 'truck',
-    });
     Deliveries.belongsTo(models.drivers, {
       foreignKey: 'driver_id',
       as: 'driver',
@@ -86,25 +62,17 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'delivery_id',
       as: 'deliveryDetails',
     });
-    Deliveries.belongsTo(models.users, {
-      foreignKey: 'received_by',
-      as: 'receiver',
-    });
     Deliveries.belongsTo(models.fuel_location_distances, {
-      foreignKey: 'outbound_distance_id',
-      as: 'outboundDistance',
-    });
-    Deliveries.belongsTo(models.fuel_location_distances, {
-      foreignKey: 'return_distance_id',
-      as: 'returnDistance',
+      foreignKey: 'from_distance_id',
+      as: 'fromDistance',
     });
     Deliveries.belongsTo(models.fuel_locations, {
       foreignKey: 'from_location_id',
       as: 'fromLocation',
     });
-    Deliveries.belongsTo(models.fuel_locations, {
-      foreignKey: 'to_location_id',
-      as: 'toLocation',
+    Deliveries.belongsTo(models.daily_deliveries, {
+      foreignKey: 'daily_delivery_id',
+      as: 'dailyDelivery',
     });
   };
 

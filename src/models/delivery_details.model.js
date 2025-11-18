@@ -32,6 +32,22 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
       },
+      received_by: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      received_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      to_location_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      to_distance_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       sequelize,
@@ -68,6 +84,18 @@ module.exports = function (sequelize, DataTypes) {
     DeliveryDetails.belongsTo(models.trailers, {
       foreignKey: 'trailer_id',
       as: 'trailer',
+    });
+    DeliveryDetails.belongsTo(models.fuel_locations, {
+      foreignKey: 'to_location_id',
+      as: 'toLocation',
+    });
+    DeliveryDetails.belongsTo(models.fuel_location_distances, {
+      foreignKey: 'to_distance_id',
+      as: 'toDistance',
+    });
+    DeliveryDetails.belongsTo(models.users, {
+      foreignKey: 'received_by',
+      as: 'receiver',
     });
   };
 

@@ -1,9 +1,17 @@
 const express = require('express');
-const { getTrucks, createTruck, editTruck, deleteTruck } = require('../controllers/truck.controller');
+const {
+  fetchTrucks,
+  createTruck,
+  editTruck,
+  deleteTruck,
+  fetchDailyTrucks,
+  postDailyTrucks,
+} = require('../controllers/truck.controller');
 
 const router = express.Router();
 
-router.route('/').get(getTrucks).post(createTruck);
+router.route('/').get(fetchTrucks).post(createTruck);
 router.route('/:id').put(editTruck).delete(deleteTruck);
+router.route('/daily').get(fetchDailyTrucks).post(postDailyTrucks);
 
 module.exports = router;

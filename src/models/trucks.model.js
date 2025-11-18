@@ -49,10 +49,6 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'truck_id',
       as: 'containers',
     });
-    Trucks.hasMany(models.deliveries, {
-      foreignKey: 'truck_id',
-      as: 'deliveries',
-    });
     Trucks.hasMany(models.delivery_details, {
       foreignKey: 'truck_id',
       as: 'deliveryDetails',
@@ -64,6 +60,10 @@ module.exports = function (sequelize, DataTypes) {
     Trucks.belongsTo(models.trailers, {
       foreignKey: 'trailer_id',
       as: 'trailer',
+    });
+    Trucks.hasMany(models.daily_deliveries, {
+      foreignKey: 'truck_id',
+      as: 'dailyDeliveries',
     });
   };
 

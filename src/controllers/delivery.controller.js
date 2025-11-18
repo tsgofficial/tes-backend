@@ -1,29 +1,22 @@
 const db = require('../models');
 const catchAsync = require('../utils/catchAsync');
 
+const Users = db.users;
 const Trucks = db.trucks;
 const Drivers = db.drivers;
 const Trailers = db.trailers;
-const DeliveryDetails = db.delivery_details;
 const FuelTypes = db.fuel_types;
 const Deliveries = db.deliveries;
 const Containers = db.containers;
+const DailyDeliveries = db.daily_deliveries;
 const FuelLocations = db.fuel_locations;
+const DeliveryDetails = db.delivery_details;
+const FuelLocationDistances = db.fuel_location_distances;
 
 const getDeliveries = catchAsync(async (req, res) => {
   const { startDate, endDate, is_received } = req.query;
 
   const deliveries = await Deliveries.findAll({
-    where: {
-      ...(startDate && endDate
-        ? {
-            date: {
-              [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)],
-            },
-          }
-        : {}),
-      ...(is_received !== undefined ? { is_received } : {}),
-    },
     include: [
       {
         model: Drivers,
@@ -45,13 +38,17 @@ const getDeliveries = catchAsync(async (req, res) => {
         attributes: ['id', 'name', 'latitude', 'longitude'],
       },
       {
-        model: FuelLocations,
-        as: 'toLocation',
-        attributes: ['id', 'name', 'latitude', 'longitude'],
-      },
-      {
         model: DeliveryDetails,
         as: 'deliveryDetails',
+        where: {
+          ...(is_received && { density: { [db.Sequelize.Op.ne]: null } }),
+          ...(startDate &&
+            endDate && {
+              received_at: {
+                [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)],
+              },
+            }),
+        },
         include: [
           {
             model: FuelTypes,
@@ -62,6 +59,21 @@ const getDeliveries = catchAsync(async (req, res) => {
             model: Containers,
             as: 'container',
             attributes: ['id', 'volume'],
+          },
+          {
+            model: Users,
+            as: 'received',
+            attributes: ['id', 'firstname', 'lastname'],
+          },
+          {
+            model: FuelLocations,
+            as: 'toLocation',
+            attributes: ['id', 'name'],
+          },
+          {
+            model: FuelLocationDistances,
+            as: 'toDistance',
+            attributes: ['id', 'name', 'distance'],
           },
         ],
       },
@@ -74,8 +86,6 @@ const getDeliveries = catchAsync(async (req, res) => {
     date: delivery.date,
     driver: delivery.driver,
     fromLocation: delivery.fromLocation,
-    toLocation: delivery.toLocation,
-    is_received: delivery.is_received === 1,
     truck: {
       id: delivery.truck_id,
       licensePlate: delivery.truck?.license_plate || '',
@@ -88,6 +98,9 @@ const getDeliveries = catchAsync(async (req, res) => {
           fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
           containerId: log.container.id,
+          toLocation: log.toLocation,
+          toDistance: log.toDistance,
+          is_received: log.density !== null,
         })),
     },
     trailers: {
@@ -102,6 +115,9 @@ const getDeliveries = catchAsync(async (req, res) => {
           fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
           containerId: log.container.id,
+          toLocation: log.toLocation,
+          toDistance: log.toDistance,
+          is_received: log.density !== null,
         })),
     },
   }));
@@ -385,4 +401,69 @@ const receiveDelivery = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { getDeliveries, createDelivery, editDelivery, deleteDelivery, receiveDelivery };
+const getDateDeliveries = catchAsync(async (req, res) => {
+  const { date } = req.params;
+
+  const deliveriesResult = await Deliveries.findAll({
+    include: [
+      {
+        model: DeliveryDetails,
+        as: 'deliveryDetails',
+        include: [
+          {
+            model: FuelLocations,
+            as: 'toLocation',
+          },
+        ],
+      },
+      {
+        model: DailyDeliveries,
+        as: 'dailyDelivery',
+        where: { date },
+        include: [
+          {
+            model: Trucks,
+            as: 'truck',
+          },
+        ],
+      },
+      {
+        model: Drivers,
+        as: 'driver',
+      },
+      {
+        model: Trailers,
+        as: 'trailer',
+      },
+      {
+        model: FuelLocations,
+        as: 'fromLocation',
+      },
+    ],
+  });
+
+  const deliveries = deliveriesResult.map((dt) => dt.get({ plain: true }));
+
+  const result = deliveries.map((delivery) => ({
+    truck: delivery.dailyDelivery.truck,
+    driver: delivery.driver,
+    trailer: delivery.trailer,
+    deliveryDetails: delivery.deliveryDetails,
+    deliveryId: delivery.id,
+    admin_status: delivery.dailyDelivery.admin_status,
+    leave_status: delivery.dailyDelivery.leave_status,
+    leave_time: delivery.dailyDelivery.leave_time,
+    manager_status: delivery.manager_status,
+    fromLocation: delivery.fromLocation,
+    toLocations: delivery.deliveryDetails.map((dd) => dd.toLocation),
+    // inspector_status: delivery.inspector_status,
+  }));
+
+  res.send({
+    success: true,
+    message: 'Fetched deliveries data successfully',
+    data: result,
+  });
+});
+
+module.exports = { getDeliveries, createDelivery, editDelivery, deleteDelivery, receiveDelivery, getDateDeliveries };
