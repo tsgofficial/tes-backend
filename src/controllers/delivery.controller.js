@@ -495,15 +495,46 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     leave_status_id: delivery.leave_status_id,
     manager_status: delivery.managerStatus?.name,
     manager_status_id: delivery.manager_status_id,
-    fromLocation: delivery.fromLocation,
-    toLocations: delivery.deliveryDetails?.map((dd) => dd.toLocation),
     deliveries: delivery.deliveries?.map((del) => ({
       id: del.id,
       date: del.date,
       is_received: del.is_received,
       received_datetime: del.received_datetime,
+
       driver: del.driver,
       trailer: del.trailer,
+
+      fromLocation: del.fromLocation,
+      toLocations: del.deliveryDetails
+        ?.map((dd) => dd.toLocation)
+        .filter((location, index, self) => index === self.findIndex((l) => l.id === location.id)),
+
+      truckFuelDetails: del.deliveryDetails
+        .filter((log) => log.truck_id === delivery.truck.id)
+        .map((log) => ({
+          id: log.id,
+          density: log.density,
+          fuelType: log.fuelType.name,
+          fuelTypeId: log.fuelType.id,
+          volume: log.container.volume,
+          containerId: log.container.id,
+          toLocation: log.toLocation,
+          is_received: log.density !== null,
+        })),
+
+      trailerFuelDetails: del.deliveryDetails
+        .filter((log) => log.trailer_id === del.trailer_id)
+        .map((log) => ({
+          id: log.id,
+          density: log.density,
+          fuelType: log.fuelType.name,
+          fuelTypeId: log.fuelType.id,
+          volume: log.container.volume,
+          containerId: log.container.id,
+          toLocation: log.toLocation,
+          is_received: log.density !== null,
+        })),
+
       deliveryDetails: del.deliveryDetails?.map((dd) => ({
         detail_id: dd.id,
         container_id: dd.container_id,
