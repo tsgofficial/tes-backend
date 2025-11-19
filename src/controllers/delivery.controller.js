@@ -9,6 +9,7 @@ const FuelTypes = db.fuel_types;
 const Deliveries = db.deliveries;
 const Containers = db.containers;
 const LeaveStatus = db.leave_status;
+const TruckStatus = db.truck_status;
 const FuelLocations = db.fuel_locations;
 const ManagerStatus = db.manager_status;
 const DailyDeliveries = db.daily_deliveries;
@@ -407,60 +408,74 @@ const getDateDeliveries = catchAsync(async (req, res) => {
   const { role } = req;
   const { date } = req.params;
 
-  const deliveriesResult = await Deliveries.findAll({
+  const deliveriesResult = await DailyDeliveries.findAll({
+    where: { date },
     include: [
       {
-        model: DeliveryDetails,
-        as: 'deliveryDetails',
+        model: Trucks,
+        as: 'truck',
         include: [
+          {
+            model: TruckStatus,
+            as: 'status',
+          },
+          {
+            model: Trailers,
+            as: 'trailer',
+          },
+          {
+            model: Drivers,
+            as: 'driver',
+          },
+        ],
+      },
+      {
+        model: LeaveStatus,
+        as: 'leaveStatus',
+      },
+      {
+        model: Deliveries,
+        as: 'deliveries',
+        include: [
+          {
+            model: DeliveryDetails,
+            as: 'deliveryDetails',
+            include: [
+              {
+                model: FuelLocations,
+                as: 'toLocation',
+              },
+              {
+                model: Containers,
+                as: 'container',
+              },
+              {
+                model: FuelTypes,
+                as: 'fuelType',
+              },
+              {
+                model: Users,
+                as: 'receiver',
+              },
+            ],
+          },
+          {
+            model: Drivers,
+            as: 'driver',
+          },
+          {
+            model: Trailers,
+            as: 'trailer',
+          },
           {
             model: FuelLocations,
-            as: 'toLocation',
+            as: 'fromLocation',
           },
           {
-            model: Containers,
-            as: 'container',
-          },
-          {
-            model: FuelTypes,
-            as: 'fuelType',
-          },
-          {
-            model: Users,
-            as: 'receiver',
+            model: ManagerStatus,
+            as: 'managerStatus',
           },
         ],
-      },
-      {
-        model: DailyDeliveries,
-        as: 'dailyDelivery',
-        where: { date },
-        include: [
-          {
-            model: Trucks,
-            as: 'truck',
-          },
-          {
-            model: LeaveStatus,
-            as: 'leaveStatus',
-          },
-        ],
-      },
-      {
-        model: Drivers,
-        as: 'driver',
-      },
-      {
-        model: Trailers,
-        as: 'trailer',
-      },
-      {
-        model: FuelLocations,
-        as: 'fromLocation',
-      },
-      {
-        model: ManagerStatus,
-        as: 'managerStatus',
       },
     ],
   });
@@ -468,31 +483,82 @@ const getDateDeliveries = catchAsync(async (req, res) => {
   const deliveries = deliveriesResult.map((dt) => dt.get({ plain: true }));
 
   const result = deliveries.map((delivery) => ({
-    id: delivery.id,
-    truck: delivery.dailyDelivery.truck,
-    driver: delivery.driver,
-    trailer: delivery.trailer,
-    admin_status: delivery.dailyDelivery?.admin_status,
+    truck: {
+      id: delivery.truck.id,
+      license_plate: delivery.truck.license_plate,
+      status: delivery.truck?.status?.name,
+      status_id: delivery.truck?.status_id,
+    },
+    trailer: delivery.truck?.trailer,
+    driver: delivery.truck?.driver,
+    leave_status: delivery.leaveStatus.name,
+    leave_status_id: delivery.leave_status_id,
     manager_status: delivery.managerStatus?.name,
-    leave_status: delivery.dailyDelivery?.leaveStatus.name,
+    manager_status_id: delivery.manager_status_id,
     fromLocation: delivery.fromLocation,
     toLocations: delivery.deliveryDetails?.map((dd) => dd.toLocation),
-    deliveryDetails: delivery.deliveryDetails?.map((dd) => ({
-      detail_id: dd.id,
-      container_id: dd.container_id,
-      volume: dd.container?.volume,
-      fuel_type_id: dd.fuel_type_id,
-      fuel_type_name: dd.fuelType?.name,
-      density: dd.density,
-      is_received: dd.density !== null,
-      receiver: dd.receiver ? `${dd.receiver.firstname} ${dd.receiver.lastname}` : null,
+    deliveries: delivery.deliveries?.map((del) => ({
+      id: del.id,
+      date: del.date,
+      is_received: del.is_received,
+      received_datetime: del.received_datetime,
+      driver: del.driver,
+      trailer: del.trailer,
+      deliveryDetails: del.deliveryDetails?.map((dd) => ({
+        detail_id: dd.id,
+        container_id: dd.container_id,
+        volume: dd.container?.volume,
+        fuel_type_id: dd.fuel_type_id,
+        fuel_type_name: dd.fuelType?.name,
+        density: dd.density,
+        is_received: dd.density !== null,
+        receiver: dd.receiver ? `${dd.receiver.firstname} ${dd.receiver.lastname}` : null,
+      })),
     })),
   }));
+
+  let otherTrucksData = [];
+
+  if (role !== 'manager') {
+    const otherTrucks = await Trucks.findAll({
+      where: {
+        id: {
+          [db.Sequelize.Op.notIn]: deliveries.map((d) => d.truck.id),
+        },
+      },
+      include: [
+        {
+          model: TruckStatus,
+          as: 'status',
+        },
+        {
+          model: Trailers,
+          as: 'trailer',
+        },
+        {
+          model: Drivers,
+          as: 'driver',
+        },
+      ],
+    });
+
+    otherTrucksData = otherTrucks.map((truck) => ({
+      truck: {
+        id: truck.id,
+        license_plate: truck.license_plate,
+        status: truck.status?.name,
+        status_id: truck.status_id,
+      },
+      trailer: truck.trailer,
+      driver: truck.driver,
+      deliveries: [],
+    }));
+  }
 
   res.send({
     success: true,
     message: 'Fetched deliveries data successfully',
-    data: result,
+    data: [...result, ...otherTrucksData],
   });
 });
 
