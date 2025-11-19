@@ -9,6 +9,7 @@ const deliveries = require('./delivery.route');
 const fuelTypes = require('./fuel_type.route');
 const fuelLocations = require('./fuel_location.route');
 const fuelLocationDistances = require('./fuel_location_distance.route');
+const statuses = require('./status.route');
 
 const report = require('./report.route');
 const { protect } = require('../middlewares/auth');
@@ -58,6 +59,10 @@ const adminRoutes = [
   {
     path: '/fuel-location-distances',
     route: fuelLocationDistances,
+  },
+  {
+    path: '/statuses',
+    route: statuses,
   },
 ];
 

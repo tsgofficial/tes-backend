@@ -20,20 +20,6 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      admin_status: {
-        type: DataTypes.ENUM(
-          'ready',
-          'pending',
-          'on_delivery',
-          'need_service',
-          'driver_absent',
-          'driver_sick',
-          'has_license_problem',
-          'wont_deliver'
-        ),
-        allowNull: true,
-        defaultValue: 'ready',
-      },
     },
     {
       sequelize,

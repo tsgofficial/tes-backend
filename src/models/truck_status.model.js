@@ -29,9 +29,9 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   TruckStatus.associate = function (models) {
-    TruckStatus.hasMany(models.deliveries, {
+    TruckStatus.hasMany(models.trucks, {
       foreignKey: 'status_id',
-      as: 'deliveries',
+      as: 'trucks',
     });
   };
 
