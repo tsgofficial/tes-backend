@@ -6,6 +6,7 @@ const Trucks = db.trucks;
 const Drivers = db.drivers;
 const Trailers = db.trailers;
 const Containers = db.containers;
+const DailyDeliveries = db.daily_deliveries;
 
 const truckRegExp = /^\d{4}[А-ЯӨҮЁ]{3}$/;
 
@@ -184,4 +185,44 @@ const deleteTruck = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { fetchTrucks, createTruck, editTruck, deleteTruck };
+const postDailyTrucks = catchAsync(async (req, res) => {
+  const { date, truckIds } = req.body;
+
+  if (!date || !truckIds) {
+    return res.status(400).send({
+      success: false,
+      message: 'date and truckIds are required',
+    });
+  }
+
+  const existingDeliveries = await DailyDeliveries.findAll({
+    where: { date },
+  });
+
+  const existingTruckIds = existingDeliveries.map((delivery) => delivery.truck_id);
+
+  const newTruckIds = truckIds.filter((truck_id) => !existingTruckIds.includes(truck_id));
+
+  if (newTruckIds.length === 0) {
+    return res.send({
+      success: true,
+      message: 'No new trucks to add for the specified date',
+      data: [],
+    });
+  }
+
+  const dailyTruck = await DailyDeliveries.bulkCreate(
+    truckIds.map((truck_id) => ({
+      date,
+      truck_id,
+    }))
+  );
+
+  res.send({
+    success: true,
+    message: 'Daily trucks saved successfully',
+    data: dailyTruck,
+  });
+});
+
+module.exports = { fetchTrucks, createTruck, editTruck, deleteTruck, postDailyTrucks };
