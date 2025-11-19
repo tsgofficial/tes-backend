@@ -14,130 +14,13 @@ const FuelLocations = db.fuel_locations;
 const ManagerStatus = db.manager_status;
 const DailyDeliveries = db.daily_deliveries;
 const DeliveryDetails = db.delivery_details;
-const FuelLocationDistances = db.fuel_location_distances;
-
-const getDeliveries = catchAsync(async (req, res) => {
-  const { startDate, endDate, is_received } = req.query;
-
-  const deliveries = await Deliveries.findAll({
-    include: [
-      {
-        model: Drivers,
-        as: 'driver',
-      },
-      {
-        model: Trucks,
-        as: 'truck',
-        attributes: ['id', 'license_plate'],
-      },
-      {
-        model: Trailers,
-        as: 'trailer',
-        attributes: ['id', 'license_plate'],
-      },
-      {
-        model: FuelLocations,
-        as: 'fromLocation',
-        attributes: ['id', 'name', 'latitude', 'longitude'],
-      },
-      {
-        model: DeliveryDetails,
-        as: 'deliveryDetails',
-        where: {
-          ...(is_received && { density: { [db.Sequelize.Op.ne]: null } }),
-          ...(startDate &&
-            endDate && {
-              received_at: {
-                [db.Sequelize.Op.between]: [new Date(startDate), new Date(endDate)],
-              },
-            }),
-        },
-        include: [
-          {
-            model: FuelTypes,
-            as: 'fuelType',
-            attributes: ['id', 'name'],
-          },
-          {
-            model: Containers,
-            as: 'container',
-            attributes: ['id', 'volume'],
-          },
-          {
-            model: Users,
-            as: 'received',
-            attributes: ['id', 'firstname', 'lastname'],
-          },
-          {
-            model: FuelLocations,
-            as: 'toLocation',
-            attributes: ['id', 'name'],
-          },
-          {
-            model: FuelLocationDistances,
-            as: 'toDistance',
-            attributes: ['id', 'name', 'distance'],
-          },
-        ],
-      },
-    ],
-    order: [['id', 'DESC']],
-  });
-
-  const formattedDeliveries = deliveries.map((delivery) => ({
-    id: delivery.id,
-    date: delivery.date,
-    driver: delivery.driver,
-    fromLocation: delivery.fromLocation,
-    truck: {
-      id: delivery.truck_id,
-      licensePlate: delivery.truck?.license_plate || '',
-      fuelDetails: delivery.deliveryDetails
-        .filter((log) => log.truck_id === delivery.truck_id)
-        .map((log) => ({
-          id: log.id,
-          density: log.density,
-          fuelType: log.fuelType.name,
-          fuelTypeId: log.fuelType.id,
-          volume: log.container.volume,
-          containerId: log.container.id,
-          toLocation: log.toLocation,
-          toDistance: log.toDistance,
-          is_received: log.density !== null,
-        })),
-    },
-    trailers: {
-      id: delivery.trailer_id,
-      licensePlate: delivery.trailer?.license_plate || '',
-      fuelDetails: delivery.deliveryDetails
-        .filter((log) => log.trailer_id === delivery.trailer_id)
-        .map((log) => ({
-          id: log.id,
-          density: log.density,
-          fuelType: log.fuelType.name,
-          fuelTypeId: log.fuelType.id,
-          volume: log.container.volume,
-          containerId: log.container.id,
-          toLocation: log.toLocation,
-          toDistance: log.toDistance,
-          is_received: log.density !== null,
-        })),
-    },
-  }));
-
-  res.send({
-    success: true,
-    message: 'Fetched deliveries data successfully',
-    data: formattedDeliveries,
-  });
-});
 
 const createDelivery = catchAsync(async (req, res) => {
-  const { date, driverId, fromLocationId, toLocationId, truck, trailer } = req.body;
+  const { driverId, dailyDeliveryId, fromLocationId, trailer, truck } = req.body;
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!date || !driverId || !fromLocationId || !toLocationId || !truckId) {
+  if (!dailyDeliveryId || !fromLocationId || !truckId || !driverId) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
@@ -176,12 +59,10 @@ const createDelivery = catchAsync(async (req, res) => {
   }
 
   const delivery = await Deliveries.create({
-    date,
-    truck_id: truck.id,
-    trailer_id: trailer ? trailer.id : null,
     driver_id: driverId,
+    trailer_id: trailer ? trailer.id : null,
+    daily_delivery_id: dailyDeliveryId,
     from_location_id: fromLocationId,
-    to_location_id: toLocationId,
   });
 
   const fuelLogPromises = fuelDetails.map((fuelDetail) =>
@@ -190,17 +71,19 @@ const createDelivery = catchAsync(async (req, res) => {
       truck_id: truckId,
       fuel_type_id: fuelDetail.fuelTypeId,
       container_id: fuelDetail.containerId,
+      to_location_id: fuelDetail.toLocationId,
     })
   );
   await Promise.all(fuelLogPromises);
 
-  if (trailer) {
+  if (trailer?.fuelDetails && trailer.fuelDetails.length > 0) {
     const trailerLogPromises = trailer.fuelDetails.map((fuelDetail) =>
       DeliveryDetails.create({
         delivery_id: delivery.id,
         trailer_id: trailer.id,
         fuel_type_id: fuelDetail.fuelTypeId,
         container_id: fuelDetail.containerId,
+        to_location_id: fuelDetail.toLocationId,
       })
     );
     await Promise.all(trailerLogPromises);
@@ -216,11 +99,11 @@ const createDelivery = catchAsync(async (req, res) => {
 const editDelivery = catchAsync(async (req, res) => {
   const { id: deliveryId } = req.params;
 
-  const { date, driverId, truck, trailer } = req.body;
+  const { driverId, truck, trailer, fromLocationId } = req.body;
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!date || !driverId || !truckId) {
+  if (!driverId || !truckId || !fromLocationId) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
@@ -240,9 +123,9 @@ const editDelivery = catchAsync(async (req, res) => {
     });
   }
 
-  if (trailer) {
-    const existingTrailers = await Trailers.findByPk(trailer.id, { include: [{ model: Containers, as: 'containers' }] });
+  const existingTrailers = await Trailers.findByPk(trailer.id, { include: [{ model: Containers, as: 'containers' }] });
 
+  if (existingTrailers) {
     const trailerContainerIds = existingTrailers.containers.map((container) => container.id);
     const givenTrailerContainerIds = trailer.fuelDetails?.map((detail) => detail.containerId) ?? [];
 
@@ -263,11 +146,10 @@ const editDelivery = catchAsync(async (req, res) => {
     });
   }
 
-  delivery.date = date;
   delivery.driver_id = driverId;
-  delivery.truck_id = truckId;
   delivery.trailer_id = trailer ? trailer.id : null;
-  await delivery.save();
+  delivery.from_location_id = fromLocationId;
+  await delivery.save({ fields: ['driver_id', 'trailer_id', 'from_location_id'] });
 
   await DeliveryDetails.destroy({ where: { delivery_id: deliveryId } });
 
@@ -277,17 +159,19 @@ const editDelivery = catchAsync(async (req, res) => {
       truck_id: truckId,
       fuel_type_id: fuelDetail.fuelTypeId,
       container_id: fuelDetail.containerId,
+      to_location_id: fuelDetail.toLocationId,
     })
   );
   await Promise.all(fuelLogPromises);
 
-  if (trailer) {
+  if (trailer?.fuelDetails && trailer.fuelDetails.length > 0) {
     const trailerLogPromises = trailer.fuelDetails.map((fuelDetail) =>
       DeliveryDetails.create({
         delivery_id: deliveryId,
         trailer_id: trailer.id,
         fuel_type_id: fuelDetail.fuelTypeId,
         container_id: fuelDetail.containerId,
+        to_location_id: fuelDetail.toLocationId,
       })
     );
     await Promise.all(trailerLogPromises);
@@ -322,11 +206,11 @@ const deleteDelivery = catchAsync(async (req, res) => {
 
 const receiveDelivery = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { userId } = req;
+  const { id: userId } = req.user;
 
-  const { outboundDistanceId, returnDistanceId, densityDetails } = req.body;
+  const { fromDistanceId, toDistanceId, densityDetails } = req.body;
 
-  if (!densityDetails || densityDetails.length === 0) {
+  if (!fromDistanceId || !densityDetails || densityDetails.length === 0) {
     return res.status(400).send({
       success: false,
       message: 'Density details are required',
@@ -362,11 +246,8 @@ const receiveDelivery = catchAsync(async (req, res) => {
   if (!delivery.received_datetime) {
     delivery.received_datetime = new Date();
   }
-  if (outboundDistanceId) {
-    delivery.outbound_distance_id = outboundDistanceId;
-  }
-  if (returnDistanceId) {
-    delivery.return_distance_id = returnDistanceId;
+  if (toDistanceId) {
+    delivery.to_distance_id = toDistanceId;
   }
 
   const densityValues = densityDetails.map((d) => d.density);
@@ -382,7 +263,7 @@ const receiveDelivery = catchAsync(async (req, res) => {
     .map((densityDetail) => {
       const { detailId, density } = densityDetail;
       return DeliveryDetails.update(
-        { density },
+        { density, from_distance_id: fromDistanceId, received_by: userId, received_at: new Date() },
         {
           where: { id: detailId },
         }
@@ -512,39 +393,30 @@ const getDateDeliveries = catchAsync(async (req, res) => {
       truckFuelDetails: del.deliveryDetails
         .filter((log) => log.truck_id === delivery.truck.id)
         .map((log) => ({
-          id: log.id,
+          detail_id: log.id,
           density: log.density,
-          fuelType: log.fuelType.name,
-          fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
-          containerId: log.container.id,
           toLocation: log.toLocation,
           is_received: log.density !== null,
+          container_id: log.container_id,
+          fuel_type_id: log.fuel_type_id,
+          fuel_type_name: log.fuelType?.name,
+          receiver: log.receiver ? `${log.receiver.firstname} ${log.receiver.lastname}` : null,
         })),
 
       trailerFuelDetails: del.deliveryDetails
         .filter((log) => log.trailer_id === del.trailer_id)
         .map((log) => ({
-          id: log.id,
+          detail_id: log.id,
           density: log.density,
-          fuelType: log.fuelType.name,
-          fuelTypeId: log.fuelType.id,
           volume: log.container.volume,
-          containerId: log.container.id,
           toLocation: log.toLocation,
           is_received: log.density !== null,
+          container_id: log.container_id,
+          fuel_type_id: log.fuel_type_id,
+          fuel_type_name: log.fuelType?.name,
+          receiver: log.receiver ? `${log.receiver.firstname} ${log.receiver.lastname}` : null,
         })),
-
-      deliveryDetails: del.deliveryDetails?.map((dd) => ({
-        detail_id: dd.id,
-        container_id: dd.container_id,
-        volume: dd.container?.volume,
-        fuel_type_id: dd.fuel_type_id,
-        fuel_type_name: dd.fuelType?.name,
-        density: dd.density,
-        is_received: dd.density !== null,
-        receiver: dd.receiver ? `${dd.receiver.firstname} ${dd.receiver.lastname}` : null,
-      })),
     })),
   }));
 
@@ -594,7 +466,6 @@ const getDateDeliveries = catchAsync(async (req, res) => {
 });
 
 module.exports = {
-  getDeliveries,
   createDelivery,
   editDelivery,
   deleteDelivery,

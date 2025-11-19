@@ -1,6 +1,5 @@
 const express = require('express');
 const {
-  getDeliveries,
   createDelivery,
   editDelivery,
   deleteDelivery,
@@ -10,7 +9,7 @@ const {
 
 const router = express.Router();
 
-router.route('/').get(getDeliveries).post(createDelivery);
+router.route('/').get().post(createDelivery);
 router.route('/:id').put(editDelivery).delete(deleteDelivery);
 router.route('/:date').get(getDateDeliveries);
 

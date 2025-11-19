@@ -12,6 +12,13 @@ const protect = async (req, res, next) => {
   try {
     const tokenObj = jwt.verify(token, process.env.JWT_SECRET ?? '');
     req.user = tokenObj;
+
+    const { role } = tokenObj;
+    const { baseUrl, method } = req;
+
+    if (role === 'inspector' && !baseUrl.includes('/deliveries/receive')) {
+      return res.send({ success: false, message: 'You are not authorized to access this resource' });
+    }
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {

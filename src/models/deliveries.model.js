@@ -24,7 +24,7 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      from_distance_id: {
+      to_distance_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -63,8 +63,8 @@ module.exports = function (sequelize, DataTypes) {
       as: 'deliveryDetails',
     });
     Deliveries.belongsTo(models.fuel_location_distances, {
-      foreignKey: 'from_distance_id',
-      as: 'fromDistance',
+      foreignKey: 'to_distance_id',
+      as: 'toDistance',
     });
     Deliveries.belongsTo(models.fuel_locations, {
       foreignKey: 'from_location_id',
