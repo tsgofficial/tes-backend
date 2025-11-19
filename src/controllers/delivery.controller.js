@@ -8,8 +8,10 @@ const Trailers = db.trailers;
 const FuelTypes = db.fuel_types;
 const Deliveries = db.deliveries;
 const Containers = db.containers;
-const DailyDeliveries = db.daily_deliveries;
+const LeaveStatus = db.leave_status;
 const FuelLocations = db.fuel_locations;
+const ManagerStatus = db.manager_status;
+const DailyDeliveries = db.daily_deliveries;
 const DeliveryDetails = db.delivery_details;
 const FuelLocationDistances = db.fuel_location_distances;
 
@@ -402,6 +404,7 @@ const receiveDelivery = catchAsync(async (req, res) => {
 });
 
 const getDateDeliveries = catchAsync(async (req, res) => {
+  const { role } = req;
   const { date } = req.params;
 
   const deliveriesResult = await Deliveries.findAll({
@@ -414,6 +417,18 @@ const getDateDeliveries = catchAsync(async (req, res) => {
             model: FuelLocations,
             as: 'toLocation',
           },
+          {
+            model: Containers,
+            as: 'container',
+          },
+          {
+            model: FuelTypes,
+            as: 'fuelType',
+          },
+          {
+            model: Users,
+            as: 'receiver',
+          },
         ],
       },
       {
@@ -424,6 +439,10 @@ const getDateDeliveries = catchAsync(async (req, res) => {
           {
             model: Trucks,
             as: 'truck',
+          },
+          {
+            model: LeaveStatus,
+            as: 'leaveStatus',
           },
         ],
       },
@@ -439,24 +458,35 @@ const getDateDeliveries = catchAsync(async (req, res) => {
         model: FuelLocations,
         as: 'fromLocation',
       },
+      {
+        model: ManagerStatus,
+        as: 'managerStatus',
+      },
     ],
   });
 
   const deliveries = deliveriesResult.map((dt) => dt.get({ plain: true }));
 
   const result = deliveries.map((delivery) => ({
+    id: delivery.id,
     truck: delivery.dailyDelivery.truck,
     driver: delivery.driver,
     trailer: delivery.trailer,
-    deliveryDetails: delivery.deliveryDetails,
-    deliveryId: delivery.id,
-    admin_status: delivery.dailyDelivery.admin_status,
-    leave_status: delivery.dailyDelivery.leave_status,
-    leave_time: delivery.dailyDelivery.leave_time,
-    manager_status: delivery.manager_status,
+    admin_status: delivery.dailyDelivery?.admin_status,
+    manager_status: delivery.managerStatus?.name,
+    leave_status: delivery.dailyDelivery?.leaveStatus.name,
     fromLocation: delivery.fromLocation,
-    toLocations: delivery.deliveryDetails.map((dd) => dd.toLocation),
-    // inspector_status: delivery.inspector_status,
+    toLocations: delivery.deliveryDetails?.map((dd) => dd.toLocation),
+    deliveryDetails: delivery.deliveryDetails?.map((dd) => ({
+      detail_id: dd.id,
+      container_id: dd.container_id,
+      volume: dd.container?.volume,
+      fuel_type_id: dd.fuel_type_id,
+      fuel_type_name: dd.fuelType?.name,
+      density: dd.density,
+      is_received: dd.density !== null,
+      receiver: dd.receiver ? `${dd.receiver.firstname} ${dd.receiver.lastname}` : null,
+    })),
   }));
 
   res.send({
@@ -466,4 +496,52 @@ const getDateDeliveries = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { getDeliveries, createDelivery, editDelivery, deleteDelivery, receiveDelivery, getDateDeliveries };
+const postDailyDeliveryTrucks = catchAsync(async (req, res) => {
+  const { date, truckIds } = req.body;
+
+  if (!date || !truckIds) {
+    return res.status(400).send({
+      success: false,
+      message: 'date and truckIds are required',
+    });
+  }
+
+  const existingDeliveries = await DailyDeliveries.findAll({
+    where: { date },
+  });
+
+  const existingTruckIds = existingDeliveries.map((delivery) => delivery.truck_id);
+
+  const newTruckIds = truckIds.filter((truck_id) => !existingTruckIds.includes(truck_id));
+
+  if (newTruckIds.length === 0) {
+    return res.send({
+      success: true,
+      message: 'No new trucks to add for the specified date',
+      data: [],
+    });
+  }
+
+  const dailyTruck = await DailyDeliveries.bulkCreate(
+    truckIds.map((truck_id) => ({
+      date,
+      truck_id,
+    }))
+  );
+
+  res.send({
+    success: true,
+    message: 'Daily trucks saved successfully',
+    data: dailyTruck,
+  });
+});
+
+module.exports = {
+  getDeliveries,
+  createDelivery,
+  editDelivery,
+  deleteDelivery,
+  receiveDelivery,
+  getDateDeliveries,
+  postDailyDeliveryTrucks,
+};

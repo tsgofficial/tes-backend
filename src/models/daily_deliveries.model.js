@@ -16,8 +16,8 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      leave_time: {
-        type: DataTypes.TIME,
+      leave_status_id: {
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
       admin_status: {
@@ -33,10 +33,6 @@ module.exports = function (sequelize, DataTypes) {
         ),
         allowNull: true,
         defaultValue: 'ready',
-      },
-      leave_status: {
-        type: DataTypes.ENUM('left', 'uncertain'),
-        allowNull: true,
       },
     },
     {
@@ -62,6 +58,10 @@ module.exports = function (sequelize, DataTypes) {
     DailyDeliveries.hasMany(models.deliveries, {
       foreignKey: 'daily_delivery_id',
       as: 'deliveries',
+    });
+    DailyDeliveries.belongsTo(models.leave_status, {
+      foreignKey: 'leave_status_id',
+      as: 'leaveStatus',
     });
   };
 

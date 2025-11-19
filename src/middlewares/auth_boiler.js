@@ -42,9 +42,11 @@ const protect = async (req, res, next) => {
   }
   try {
     const tokenObj = jwt.verify(token, process.env.JWT_SECRET ?? '');
-    req.userId = tokenObj.user.id;
-    req.kinderId = tokenObj.user.kinder.id;
-    req.roleId = tokenObj.user.role.id;
+    req.role = tokenObj.user.role;
+    req.user_id = tokenObj.user.id;
+    req.firstname = tokenObj.user.firstName;
+    req.lastname = tokenObj.user.lastName;
+    req.location_id = tokenObj.user.location_id;
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {

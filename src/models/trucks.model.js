@@ -28,6 +28,11 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: true,
       },
+      status_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
+        defaultValue: 1,
+      },
     },
     {
       sequelize,
@@ -64,6 +69,10 @@ module.exports = function (sequelize, DataTypes) {
     Trucks.hasMany(models.daily_deliveries, {
       foreignKey: 'truck_id',
       as: 'dailyDeliveries',
+    });
+    Trucks.belongsTo(models.truck_status, {
+      foreignKey: 'status_id',
+      as: 'status',
     });
   };
 

@@ -30,6 +30,9 @@ db.delivery_details = require('./delivery_details.model')(sequelize, Sequelize);
 db.deliveries = require('./deliveries.model')(sequelize, Sequelize);
 db.fuel_location_distances = require('./fuel_location_distances.model')(sequelize, Sequelize);
 db.daily_deliveries = require('./daily_deliveries.model')(sequelize, Sequelize);
+db.leave_status = require('./leave_status.model')(sequelize, Sequelize);
+db.manager_status = require('./manager_status.model')(sequelize, Sequelize);
+db.truck_status = require('./truck_status.model')(sequelize, Sequelize);
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {

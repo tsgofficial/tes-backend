@@ -6,7 +6,6 @@ const Trucks = db.trucks;
 const Drivers = db.drivers;
 const Trailers = db.trailers;
 const Containers = db.containers;
-const DailyDeliveries = db.daily_deliveries;
 
 const truckRegExp = /^\d{4}[А-ЯӨҮЁ]{3}$/;
 
@@ -185,52 +184,4 @@ const deleteTruck = catchAsync(async (req, res) => {
   });
 });
 
-const fetchDailyTrucks = catchAsync(async (req, res) => {
-  const { date } = req.query;
-  if (!date) {
-    return res.status(400).send({
-      success: false,
-      message: 'date query parameter is required',
-    });
-  }
-
-  const dailyTrucks = await DailyDeliveries.findAll({
-    where: { date },
-    attributes: ['truck_id'],
-  });
-
-  const truckIds = dailyTrucks.map((dt) => dt.truck_id);
-
-  const trucks = await getTrucks({ truckIds });
-
-  res.send({
-    success: true,
-    data: trucks,
-  });
-});
-
-const postDailyTrucks = catchAsync(async (req, res) => {
-  const { date, truckIds } = req.body;
-
-  if (!date || !truckIds) {
-    return res.status(400).send({
-      success: false,
-      message: 'date and truckIds are required',
-    });
-  }
-
-  const dailyTruck = await DailyDeliveries.bulkCreate(
-    truckIds.map((truck_id) => ({
-      date,
-      truck_id,
-    }))
-  );
-
-  res.send({
-    success: true,
-    message: 'Daily trucks saved successfully',
-    data: dailyTruck,
-  });
-});
-
-module.exports = { fetchTrucks, createTruck, editTruck, deleteTruck, fetchDailyTrucks, postDailyTrucks };
+module.exports = { fetchTrucks, createTruck, editTruck, deleteTruck };

@@ -11,7 +11,7 @@ const fuelLocations = require('./fuel_location.route');
 const fuelLocationDistances = require('./fuel_location_distance.route');
 
 const report = require('./report.route');
-// const { protect } = require('../middlewares/auth');
+const { protect } = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -71,11 +71,8 @@ const adminRoutes = [
 defaultRoutes.forEach((route) => {
   router.use(route.path, route.route);
 });
-// adminRoutes.forEach((route) => {
-//   router.use(route.path, protect, route.route);
-// });
 adminRoutes.forEach((route) => {
-  router.use(route.path, route.route);
+  router.use(route.path, protect, route.route);
 });
 
 module.exports = router;

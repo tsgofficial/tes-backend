@@ -1,6 +1,6 @@
 const db = require('../../models');
 
-const { trucks: Trucks, drivers: Drivers, trailers: Trailers, containers: Containers } = db;
+const { trucks: Trucks, drivers: Drivers, trailers: Trailers, containers: Containers, truck_status: TruckStatus } = db;
 
 async function getTrucks({ truckIds = [] } = {}) {
   const trucksResult = await Trucks.findAll({
@@ -26,6 +26,10 @@ async function getTrucks({ truckIds = [] } = {}) {
         as: 'containers',
         attributes: ['id', 'volume'],
       },
+      {
+        model: TruckStatus,
+        as: 'status',
+      },
     ],
     order: [['id', 'DESC']],
   });
@@ -38,6 +42,7 @@ async function getTrucks({ truckIds = [] } = {}) {
 
       return {
         ...truck,
+        status: truck.status?.name,
         trailer: { ...truck.trailer, totalVolume: totalTrailerVolume },
         totalVolume,
       };

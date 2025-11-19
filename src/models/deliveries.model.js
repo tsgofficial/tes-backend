@@ -28,10 +28,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      manager_status: {
-        type: DataTypes.ENUM('need_service', 'loaded', 'change_location', 'driver_rejected', 'load_time_uncertain'),
+      manager_status_id: {
+        type: DataTypes.INTEGER,
         allowNull: true,
-        defaultValue: 'load_time_uncertain',
+        defaultValue: 5,
       },
     },
     {
@@ -73,6 +73,10 @@ module.exports = function (sequelize, DataTypes) {
     Deliveries.belongsTo(models.daily_deliveries, {
       foreignKey: 'daily_delivery_id',
       as: 'dailyDelivery',
+    });
+    Deliveries.belongsTo(models.manager_status, {
+      foreignKey: 'manager_status_id',
+      as: 'managerStatus',
     });
   };
 
