@@ -13,6 +13,7 @@ const {
   trailers: Trailers,
   users: Users,
   fuel_locations: FuelLocations,
+  daily_deliveries: DailyDeliveries,
 } = db;
 
 /**
@@ -37,7 +38,7 @@ const {
  * - deliveries: Detailed delivery information grouped by date and location
  */
 const getReport = catchAsync(async (req, res) => {
-  const { startDate, endDate, driverId, truckId, trailerId } = req.query;
+  const { startDate, endDate, driverId, truckId } = req.query;
 
   // Validate required parameters
   if (!startDate || !endDate) {
@@ -47,7 +48,7 @@ const getReport = catchAsync(async (req, res) => {
     });
   }
 
-  if (!driverId && !truckId && !trailerId) {
+  if (!driverId && !truckId) {
     return res.status(400).send({
       success: false,
       message: 'Either driverId, truckId, or trailerId is required for filtering',
@@ -79,16 +80,8 @@ const getReport = catchAsync(async (req, res) => {
     },
   };
 
-  if (driverId) {
-    whereConditions.driver_id = parseInt(driverId, 10);
-  }
-
   if (truckId) {
     whereConditions.truck_id = parseInt(truckId, 10);
-  }
-
-  if (trailerId) {
-    whereConditions.trailer_id = parseInt(trailerId, 10);
   }
 
   try {
@@ -96,6 +89,12 @@ const getReport = catchAsync(async (req, res) => {
     const deliveries = await Deliveries.findAll({
       where: whereConditions,
       include: [
+        {
+          model: DailyDeliveries,
+          as: 'dailyDelivery',
+          where: driverId ? { driver_id: parseInt(driverId, 10) } : {},
+          required: !!driverId,
+        },
         {
           model: DeliveryDetails,
           as: 'deliveryDetails',
@@ -122,18 +121,13 @@ const getReport = catchAsync(async (req, res) => {
           ],
         },
         {
-          model: Trucks,
-          as: 'truck',
-          attributes: ['id', 'license_plate'],
-        },
-        {
           model: Trailers,
           as: 'trailer',
           attributes: ['id', 'license_plate'],
         },
         {
           model: FuelLocationDistances,
-          as: 'outboundDistance',
+          as: 'toDistance',
           attributes: ['id', 'name', 'distance'],
           include: [
             {
@@ -142,11 +136,6 @@ const getReport = catchAsync(async (req, res) => {
               attributes: ['id', 'name'],
             },
           ],
-        },
-        {
-          model: FuelLocationDistances,
-          as: 'returnDistance',
-          attributes: ['id', 'name', 'distance'],
         },
         {
           model: Users,
@@ -170,15 +159,15 @@ const getReport = catchAsync(async (req, res) => {
 
     // Process deliveries and calculate totals
     const processedDeliveries = deliveries.map((delivery) => {
-      const outboundDistance = delivery.outboundDistance?.distance || 0;
-      const returnDistance = delivery.returnDistance?.distance || 0;
-      const deliveryTotalDistance = outboundDistance + returnDistance;
+      const fromDistance = delivery.fromDistance?.distance || 0;
+      const toDistance = delivery.toDistance?.distance || 0;
+      const deliveryTotalDistance = fromDistance + toDistance;
       const deliveryAverageDistance = deliveryTotalDistance / 2;
 
       // Add to total distances
       totalDistance += deliveryTotalDistance;
-      totalWithLoadDistance += outboundDistance;
-      totalWithoutLoadDistance += returnDistance;
+      totalWithLoadDistance += fromDistance;
+      totalWithoutLoadDistance += toDistance;
 
       // Group delivery details by truck and trailer
       const trucksMap = new Map();
@@ -285,10 +274,10 @@ const getReport = catchAsync(async (req, res) => {
 
       return {
         date: delivery.date ? new Date(delivery.date).toISOString().split('T')[0] : null,
-        locationDetail: delivery.outboundDistance?.location2
+        locationDetail: delivery.fromDistance?.location2
           ? {
-              id: delivery.outboundDistance.location2.id,
-              name: delivery.outboundDistance.location2.name,
+              id: delivery.fromDistance.location2.id,
+              name: delivery.fromDistance.location2.name,
             }
           : null,
         receiverDetail: delivery.receiver
@@ -298,10 +287,10 @@ const getReport = catchAsync(async (req, res) => {
               lastname: delivery.receiver.lastname,
             }
           : null,
-        deliveryTruck: delivery.truck
+        deliveryTruck: delivery.dailyDelivery.truck
           ? {
-              id: delivery.truck.id,
-              license_plate: delivery.truck.license_plate,
+              id: delivery.dailyDelivery.truck.id,
+              license_plate: delivery.dailyDelivery.truck.license_plate,
             }
           : null,
         deliveryTrailer: delivery.trailer
@@ -311,8 +300,8 @@ const getReport = catchAsync(async (req, res) => {
             }
           : null,
         tonKm: Math.round(deliveryTonKm * 100) / 100, // Round to 2 decimal places
-        withLoadDistance: Math.round(outboundDistance * 100) / 100,
-        withoutLoadDistance: Math.round(returnDistance * 100) / 100,
+        withLoadDistance: Math.round(fromDistance * 100) / 100,
+        withoutLoadDistance: Math.round(toDistance * 100) / 100,
         // details: {
         //   trucks: Array.from(trucksMap.values()),
         //   trailers: Array.from(trailersMap.values()),

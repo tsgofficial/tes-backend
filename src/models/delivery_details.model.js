@@ -48,6 +48,11 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      inspector_status_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 1,
+      },
     },
     {
       sequelize,
@@ -96,6 +101,10 @@ module.exports = function (sequelize, DataTypes) {
     DeliveryDetails.belongsTo(models.users, {
       foreignKey: 'received_by',
       as: 'receiver',
+    });
+    DeliveryDetails.belongsTo(models.inspector_status, {
+      foreignKey: 'inspector_status_id',
+      as: 'inspectorStatus',
     });
   };
 
