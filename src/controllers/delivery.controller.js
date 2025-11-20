@@ -119,6 +119,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     leave_status_id: delivery.leave_status_id,
     manager_status: delivery.managerStatus?.name,
     manager_status_id: delivery.manager_status_id,
+    delivery_count: delivery.deliveries?.length ?? 0,
     deliveries: delivery.deliveries?.map((del) => ({
       id: del.id,
       date: del.date,
