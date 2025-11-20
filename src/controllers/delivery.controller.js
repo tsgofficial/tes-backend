@@ -132,7 +132,8 @@ const getDateDeliveries = catchAsync(async (req, res) => {
         ?.map((dd) => ({
           location_id: dd.to_location_id,
           location: dd.toLocation,
-          is_received: dd.density !== null,
+          inspector_status: dd.inspectorStatus?.name,
+          inspector_status_id: dd.inspector_status_id,
           received_at: dd.received_at,
           receiver: dd.receiver,
         }))

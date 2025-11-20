@@ -8,6 +8,8 @@ const DailyDeliveries = db.daily_deliveries;
 const TruckStatus = db.truck_status;
 const LeaveStatus = db.leave_status;
 const ManagerStatus = db.manager_status;
+const InspectorStatus = db.inspector_status;
+const DeliveryDetails = db.delivery_details;
 
 const getTruckStatuses = catchAsync(async (req, res) => {
   const statuses = await TruckStatus.findAll({
@@ -29,6 +31,18 @@ const getLeaveStatuses = catchAsync(async (req, res) => {
   res.send({
     success: true,
     message: 'Fetched leave statuses successfully',
+    data: statuses,
+  });
+});
+
+const getInspectorStatuses = catchAsync(async (req, res) => {
+  const statuses = await InspectorStatus.findAll({
+    raw: true,
+  });
+
+  res.send({
+    success: true,
+    message: 'Fetched inspector statuses successfully',
     data: statuses,
   });
 });
@@ -132,11 +146,42 @@ const putLeaveStatus = catchAsync(async (req, res) => {
   });
 });
 
+const putInspectorStatus = catchAsync(async (req, res) => {
+  const { deliveryDetailId } = req.params;
+  const { statusId } = req.body;
+
+  if (!deliveryDetailId || !statusId) {
+    return res.status(400).send({
+      success: false,
+      message: 'deliveryDetailId and statusId are required',
+    });
+  }
+
+  const deliveryDetail = await DeliveryDetails.findByPk(deliveryDetailId);
+  if (!deliveryDetail) {
+    return res.status(404).send({
+      success: false,
+      message: 'Delivery detail not found',
+    });
+  }
+
+  deliveryDetail.inspector_status_id = statusId;
+  await deliveryDetail.save();
+
+  res.send({
+    success: true,
+    message: 'Inspector status updated successfully',
+    data: deliveryDetail,
+  });
+});
+
 module.exports = {
   getTruckStatuses,
   getLeaveStatuses,
   getManagerStatuses,
+  getInspectorStatuses,
   putTruckStatus,
   putManagerStatus,
   putLeaveStatus,
+  putInspectorStatus,
 };
