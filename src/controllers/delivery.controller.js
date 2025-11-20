@@ -117,8 +117,6 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     driver: delivery.truck?.driver,
     leave_status: delivery.leaveStatus.name,
     leave_status_id: delivery.leave_status_id,
-    manager_status: delivery.managerStatus?.name,
-    manager_status_id: delivery.manager_status_id,
     delivery_count: delivery.deliveries?.length ?? 0,
     deliveries: delivery.deliveries?.map((del) => ({
       id: del.id,
@@ -126,6 +124,9 @@ const getDateDeliveries = catchAsync(async (req, res) => {
 
       driver: del.driver,
       trailer: del.trailer,
+
+      manager_status: del.managerStatus?.name,
+      manager_status_id: del.manager_status_id,
 
       from_location: del.fromLocation,
 
@@ -182,10 +183,15 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     }));
   }
 
+  const totalResult = [...result, ...otherTrucksData];
+
   res.send({
     success: true,
     message: 'Fetched deliveries data successfully',
-    data: [...result, ...otherTrucksData],
+    data: {
+      result: totalResult,
+      count: totalResult.length,
+    },
   });
 });
 
@@ -459,10 +465,101 @@ const receiveDelivery = catchAsync(async (req, res) => {
   });
 });
 
+const getDeliveryDetails = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const deliveryResult = await Deliveries.findByPk(id, {
+    include: [
+      {
+        model: DeliveryDetails,
+        as: 'deliveryDetails',
+        include: [
+          {
+            model: FuelTypes,
+            as: 'fuelType',
+          },
+          {
+            model: Containers,
+            as: 'container',
+          },
+          {
+            model: FuelLocations,
+            as: 'toLocation',
+          },
+          {
+            model: Users,
+            as: 'receiver',
+          },
+          {
+            model: InspectorStatus,
+            as: 'inspectorStatus',
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!deliveryResult) {
+    return res.status(404).send({
+      success: false,
+      message: 'Delivery not found',
+    });
+  }
+
+  const delivery = deliveryResult.get({ plain: true });
+
+  const result = {
+    id: delivery.id,
+    daily_delivery_id: delivery.daily_delivery_id,
+    driver_id: delivery.driver_id,
+    trailer_id: delivery.trailer_id,
+    from_location_id: delivery.from_location_id,
+    manager_status_id: delivery.manager_status_id,
+    is_received: delivery.is_received,
+    received_by: delivery.received_by,
+    received_datetime: delivery.received_datetime,
+    truck_details: delivery.deliveryDetails
+      .filter((detail) => detail.truck_id)
+      .map((detail) => ({
+        id: detail.id,
+        truck_id: detail.truck_id,
+        fuel_type: detail.fuelType,
+        container: detail.container,
+        to_location: detail.toLocation,
+        density: detail.density,
+        inspector_status: detail.inspectorStatus,
+        inspector_status_id: detail.inspector_status_id,
+        received_at: detail.received_at,
+        receiver: detail.receiver,
+      })),
+    trailer_details: delivery.deliveryDetails
+      .filter((detail) => detail.trailer_id)
+      .map((detail) => ({
+        id: detail.id,
+        trailer_id: detail.trailer_id,
+        fuel_type: detail.fuelType,
+        container: detail.container,
+        to_location: detail.toLocation,
+        density: detail.density,
+        inspector_status: detail.inspectorStatus,
+        inspector_status_id: detail.inspector_status_id,
+        received_at: detail.received_at,
+        receiver: detail.receiver,
+      })),
+  };
+
+  res.send({
+    success: true,
+    message: 'Fetched delivery details successfully',
+    data: result,
+  });
+});
+
 module.exports = {
   createDelivery,
   editDelivery,
   deleteDelivery,
   receiveDelivery,
   getDateDeliveries,
+  getDeliveryDetails,
 };
