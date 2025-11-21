@@ -18,7 +18,7 @@ const InspectorStatus = db.inspector_status;
 
 const getDateDeliveries = catchAsync(async (req, res) => {
   const { role } = req;
-  const { date } = req.params;
+  const { date } = req.query;
 
   if (!date) {
     return res.status(400).send({

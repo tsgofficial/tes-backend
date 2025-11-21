@@ -10,9 +10,8 @@ const {
 
 const router = express.Router();
 
-router.route('/').get().post(createDelivery);
+router.route('/').get(getDateDeliveries).post(createDelivery);
 router.route('/:id').get(getDeliveryDetails).put(editDelivery).delete(deleteDelivery);
-router.route('/:date').get(getDateDeliveries);
 
 router.route('/receive/:id').post(receiveDelivery);
 
