@@ -22,7 +22,7 @@ const protect = async (req, res, next) => {
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {
-      return res.send({ success: false, message: 'Please authenticate' });
+      return res.status(401).send({ success: false, message: 'Please authenticate' });
     }
 
     return res.send({ success: false, message: 'Something went wrong' });
