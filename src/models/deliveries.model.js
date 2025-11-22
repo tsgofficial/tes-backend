@@ -78,6 +78,10 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'manager_status_id',
       as: 'managerStatus',
     });
+    Deliveries.hasMany(models.delivery_locations, {
+      foreignKey: 'delivery_id',
+      as: 'deliveryLocations',
+    });
   };
 
   return Deliveries;

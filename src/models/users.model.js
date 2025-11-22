@@ -49,12 +49,12 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  Users.assiociate = (models) => {
+  Users.associate = (models) => {
     Users.belongsTo(models.fuel_locations, {
       foreignKey: 'location_id',
       as: 'location',
     });
-    Users.hasMany(models.deliveries, {
+    Users.hasMany(models.delivery_details, {
       foreignKey: 'received_by',
       as: 'receivedDeliveries',
     });

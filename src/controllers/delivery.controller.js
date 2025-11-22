@@ -15,6 +15,7 @@ const ManagerStatus = db.manager_status;
 const DailyDeliveries = db.daily_deliveries;
 const DeliveryDetails = db.delivery_details;
 const InspectorStatus = db.inspector_status;
+const DeliveryLocations = db.delivery_locations;
 
 const getDateDeliveries = catchAsync(async (req, res) => {
   const { role } = req;
@@ -61,10 +62,6 @@ const getDateDeliveries = catchAsync(async (req, res) => {
             as: 'deliveryDetails',
             include: [
               {
-                model: FuelLocations,
-                as: 'toLocation',
-              },
-              {
                 model: Containers,
                 as: 'container',
               },
@@ -75,6 +72,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
               {
                 model: Users,
                 as: 'receiver',
+                include: [{ model: FuelLocations, as: 'location' }],
               },
               {
                 model: InspectorStatus,
@@ -132,15 +130,21 @@ const getDateDeliveries = catchAsync(async (req, res) => {
 
       location_details: del.deliveryDetails
         ?.map((dd) => ({
-          location_id: dd.to_location_id,
-          location: dd.toLocation,
           inspector_status: dd.inspectorStatus?.name,
           inspector_status_id: dd.inspector_status_id,
           received_at: dd.received_at,
-          receiver: dd.receiver,
+          receiver: {
+            id: dd.receiver?.id,
+            firstname: dd.receiver?.firstname,
+            lastname: dd.receiver?.lastname,
+          },
+          location: {
+            id: dd.receiver?.location?.id,
+            name: dd.receiver?.location?.name,
+          },
         }))
         .filter(
-          (locationDetail, index, self) => index === self.findIndex((l) => l.location_id === locationDetail.location_id)
+          (locationDetail, index, self) => index === self.findIndex((l) => l.location?.id === locationDetail.location?.id)
         ),
     })),
   }));
@@ -196,14 +200,24 @@ const getDateDeliveries = catchAsync(async (req, res) => {
 });
 
 const createDelivery = catchAsync(async (req, res) => {
-  const { driverId, dailyDeliveryId, fromLocationId, trailer, truck } = req.body;
+  const { driverId, fromLocationId, trailer, truck, toLocationIds } = req.body;
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!dailyDeliveryId || !fromLocationId || !truckId || !driverId) {
+  if (!fromLocationId || !truckId || !driverId || !toLocationIds || toLocationIds.length === 0) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
+    });
+  }
+
+  const date = new Date();
+
+  const dailyDelivery = await DailyDeliveries.findOne({ where: { date, truck_id: truckId } });
+  if (!dailyDelivery) {
+    return res.status(400).send({
+      success: false,
+      message: 'Truck is not listed for delivery',
     });
   }
 
@@ -241,7 +255,7 @@ const createDelivery = catchAsync(async (req, res) => {
   const delivery = await Deliveries.create({
     driver_id: driverId,
     trailer_id: trailer ? trailer.id : null,
-    daily_delivery_id: dailyDeliveryId,
+    daily_delivery_id: dailyDelivery.id,
     from_location_id: fromLocationId,
   });
 
@@ -251,7 +265,6 @@ const createDelivery = catchAsync(async (req, res) => {
       truck_id: truckId,
       fuel_type_id: fuelDetail.fuelTypeId,
       container_id: fuelDetail.containerId,
-      to_location_id: fuelDetail.toLocationId,
     })
   );
   await Promise.all(fuelLogPromises);
@@ -263,11 +276,17 @@ const createDelivery = catchAsync(async (req, res) => {
         trailer_id: trailer.id,
         fuel_type_id: fuelDetail.fuelTypeId,
         container_id: fuelDetail.containerId,
-        to_location_id: fuelDetail.toLocationId,
       })
     );
     await Promise.all(trailerLogPromises);
   }
+
+  await DeliveryLocations.bulkCreate(
+    toLocationIds.map((locationId) => ({
+      delivery_id: delivery.id,
+      location_id: locationId,
+    }))
+  );
 
   res.send({
     success: true,
@@ -279,11 +298,11 @@ const createDelivery = catchAsync(async (req, res) => {
 const editDelivery = catchAsync(async (req, res) => {
   const { id: deliveryId } = req.params;
 
-  const { driverId, truck, trailer, fromLocationId } = req.body;
+  const { driverId, truck, trailer, fromLocationId, toLocationIds } = req.body;
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!driverId || !truckId || !fromLocationId) {
+  if (!driverId || !truckId || !fromLocationId || !toLocationIds || toLocationIds.length === 0) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
@@ -339,7 +358,6 @@ const editDelivery = catchAsync(async (req, res) => {
       truck_id: truckId,
       fuel_type_id: fuelDetail.fuelTypeId,
       container_id: fuelDetail.containerId,
-      to_location_id: fuelDetail.toLocationId,
     })
   );
   await Promise.all(fuelLogPromises);
@@ -351,11 +369,18 @@ const editDelivery = catchAsync(async (req, res) => {
         trailer_id: trailer.id,
         fuel_type_id: fuelDetail.fuelTypeId,
         container_id: fuelDetail.containerId,
-        to_location_id: fuelDetail.toLocationId,
       })
     );
     await Promise.all(trailerLogPromises);
   }
+
+  await DeliveryLocations.destroy({ where: { delivery_id: deliveryId } });
+  await DeliveryLocations.bulkCreate(
+    toLocationIds.map((locationId) => ({
+      delivery_id: deliveryId,
+      location_id: locationId,
+    }))
+  );
 
   res.send({
     success: true,
@@ -376,6 +401,7 @@ const deleteDelivery = catchAsync(async (req, res) => {
   }
 
   await DeliveryDetails.destroy({ where: { delivery_id: id } });
+  await DeliveryLocations.destroy({ where: { delivery_id: id } });
   await delivery.destroy();
 
   res.send({
@@ -388,7 +414,7 @@ const receiveDelivery = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { id: userId } = req.user;
 
-  const { fromDistanceId, toDistanceId, densityDetails } = req.body;
+  const { fromDistanceId, toDistanceId, densityDetails, inspector_status_id } = req.body;
 
   if (!fromDistanceId || !densityDetails || densityDetails.length === 0) {
     return res.status(400).send({
@@ -443,7 +469,13 @@ const receiveDelivery = catchAsync(async (req, res) => {
     .map((densityDetail) => {
       const { detailId, density } = densityDetail;
       return DeliveryDetails.update(
-        { density, from_distance_id: fromDistanceId, received_by: userId, received_at: new Date() },
+        {
+          density,
+          from_distance_id: fromDistanceId,
+          received_by: userId,
+          received_at: new Date(),
+          inspector_status_id: inspector_status_id ?? 2,
+        },
         {
           where: { id: detailId },
         }
@@ -471,6 +503,10 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
   const deliveryResult = await Deliveries.findByPk(id, {
     include: [
       {
+        model: DeliveryLocations,
+        as: 'deliveryLocations',
+      },
+      {
         model: DeliveryDetails,
         as: 'deliveryDetails',
         include: [
@@ -481,10 +517,6 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
           {
             model: Containers,
             as: 'container',
-          },
-          {
-            model: FuelLocations,
-            as: 'toLocation',
           },
           {
             model: Users,
@@ -518,6 +550,7 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
     is_received: delivery.is_received,
     received_by: delivery.received_by,
     received_datetime: delivery.received_datetime,
+    delivery_locations: delivery.deliveryLocations.map((loc) => loc.location_id),
     truck_details: delivery.deliveryDetails
       .filter((detail) => detail.truck_id)
       .map((detail) => ({
@@ -525,7 +558,6 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
         truck_id: detail.truck_id,
         fuel_type: detail.fuelType,
         container: detail.container,
-        to_location: detail.toLocation,
         density: detail.density,
         inspector_status: detail.inspectorStatus,
         inspector_status_id: detail.inspector_status_id,
@@ -539,7 +571,6 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
         trailer_id: detail.trailer_id,
         fuel_type: detail.fuelType,
         container: detail.container,
-        to_location: detail.toLocation,
         density: detail.density,
         inspector_status: detail.inspectorStatus,
         inspector_status_id: detail.inspector_status_id,

@@ -34,6 +34,7 @@ db.leave_status = require('./leave_status.model')(sequelize, Sequelize);
 db.manager_status = require('./manager_status.model')(sequelize, Sequelize);
 db.truck_status = require('./truck_status.model')(sequelize, Sequelize);
 db.inspector_status = require('./inspector_status.model')(sequelize, Sequelize);
+db.delivery_locations = require('./delivery_locations.model')(sequelize, Sequelize);
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {
