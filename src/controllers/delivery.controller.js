@@ -67,6 +67,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
             as: 'deliveryLocations',
             where: isInspector ? { location_id: req.user.location_id } : {},
             required: isInspector,
+            include: [{ model: FuelLocations, as: 'location' }],
           },
           {
             model: DeliveryDetails,
@@ -153,8 +154,8 @@ const getDateDeliveries = catchAsync(async (req, res) => {
             lastname: dd.receiver?.lastname,
           },
           location: {
-            id: dd.receiver?.location?.id,
-            name: dd.receiver?.location?.name,
+            id: dl.location?.id,
+            name: dl.location?.name,
           },
         };
       }),

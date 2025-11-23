@@ -32,7 +32,7 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  DeliveryLocations.assiociate = (models) => {
+  DeliveryLocations.associate = (models) => {
     DeliveryLocations.belongsTo(models.deliveries, {
       foreignKey: 'delivery_id',
       as: 'delivery',
