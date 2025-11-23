@@ -48,6 +48,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
       {
         model: DailyDeliveries,
         as: 'dailyDeliveries',
+        where: { date },
         include: [
           {
             model: LeaveStatus,
@@ -109,7 +110,6 @@ const getDateDeliveries = catchAsync(async (req, res) => {
         ],
       },
     ],
-    logging: console.log,
   });
 
   const trucks = trucksResult.map((dt) => dt.get({ plain: true }));
