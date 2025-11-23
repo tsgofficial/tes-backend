@@ -337,21 +337,21 @@ const getReport = catchAsync(async (req, res) => {
   // }));
 
   // Prepare final response
-  const reportData = {
-    // totalMass: Math.round(totalMass * 100) / 100,
-    // totalTonKm: Math.round(totalTonKm * 100) / 100,
-    // totalVolume: Math.round(totalVolume * 100) / 100,
-    // totalDistance: Math.round(totalDistance * 100) / 100,
-    // totalWithLoadDistance: Math.round(totalWithLoadDistance * 100) / 100,
-    // totalWithoutLoadDistance: Math.round(totalWithoutLoadDistance * 100) / 100,
-    // totalFuelTypeDetail,
-    deliveries: Array.from(deliveryDateMap.entries()).map(([date, value]) => ({ date, deliveries: value })),
-  };
+  // const reportData = {
+  //   // totalMass: Math.round(totalMass * 100) / 100,
+  //   // totalTonKm: Math.round(totalTonKm * 100) / 100,
+  //   // totalVolume: Math.round(totalVolume * 100) / 100,
+  //   // totalDistance: Math.round(totalDistance * 100) / 100,
+  //   // totalWithLoadDistance: Math.round(totalWithLoadDistance * 100) / 100,
+  //   // totalWithoutLoadDistance: Math.round(totalWithoutLoadDistance * 100) / 100,
+  //   // totalFuelTypeDetail,
+  //   deliveries: ,
+  // };
 
   res.send({
     success: true,
     message: `Report generated successfully for period ${startDate} to ${endDate}`,
-    data: reportData,
+    data: Array.from(deliveryDateMap.entries()).map(([date, value]) => ({ date, deliveries: value })),
   });
 });
 
