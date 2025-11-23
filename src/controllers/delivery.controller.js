@@ -18,7 +18,7 @@ const InspectorStatus = db.inspector_status;
 const DeliveryLocations = db.delivery_locations;
 
 const getDateDeliveries = catchAsync(async (req, res) => {
-  const { role } = req;
+  const { role } = req.user;
   const { date } = req.query;
 
   if (!date) {
@@ -62,6 +62,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
           {
             model: DeliveryLocations,
             as: 'deliveryLocations',
+            where: role === 'inspector' ? { location_id: req.user.location_id } : {},
           },
           {
             model: DeliveryDetails,

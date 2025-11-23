@@ -16,7 +16,7 @@ const protect = async (req, res, next) => {
     const { role } = tokenObj;
     const { baseUrl, method } = req;
 
-    if (role === 'inspector' && !baseUrl.includes('/deliveries/receive')) {
+    if (role === 'inspector' && method !== 'GET' && !baseUrl.includes('/deliveries/receive')) {
       return res.send({ success: false, message: 'You are not authorized to access this resource' });
     }
     next();
