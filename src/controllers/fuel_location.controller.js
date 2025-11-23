@@ -13,7 +13,6 @@ const getFuelLocations = catchAsync(async (req, res) => {
 
   const fuelLocations = await FuelLocations.findAll({
     where: whereClause,
-    order: [['id', 'DESC']],
   });
 
   res.send({
