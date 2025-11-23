@@ -8,6 +8,10 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
         primaryKey: true,
       },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+      },
       truck_id: {
         type: DataTypes.INTEGER,
         allowNull: true,

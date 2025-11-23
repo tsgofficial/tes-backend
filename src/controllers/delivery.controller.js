@@ -28,6 +28,8 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     });
   }
 
+  const isInspector = role === 'inspector';
+
   const trucksResult = await Trucks.findAll({
     include: [
       {
@@ -46,8 +48,6 @@ const getDateDeliveries = catchAsync(async (req, res) => {
       {
         model: DailyDeliveries,
         as: 'dailyDeliveries',
-        where: { date },
-        required: false,
         include: [
           {
             model: LeaveStatus,
@@ -58,11 +58,14 @@ const getDateDeliveries = catchAsync(async (req, res) => {
       {
         model: Deliveries,
         as: 'deliveries',
+        where: { date },
+        required: isInspector,
         include: [
           {
             model: DeliveryLocations,
             as: 'deliveryLocations',
-            where: role === 'inspector' ? { location_id: req.user.location_id } : {},
+            where: isInspector ? { location_id: req.user.location_id } : {},
+            required: isInspector,
           },
           {
             model: DeliveryDetails,
@@ -106,6 +109,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
         ],
       },
     ],
+    logging: console.log,
   });
 
   const trucks = trucksResult.map((dt) => dt.get({ plain: true }));
@@ -159,7 +163,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
 
   let otherTrucksData = [];
 
-  if (role !== 'manager') {
+  if (role === 'admin' || role === 'viewer') {
     const otherTrucks = await Trucks.findAll({
       where: {
         id: {
@@ -208,24 +212,14 @@ const getDateDeliveries = catchAsync(async (req, res) => {
 });
 
 const createDelivery = catchAsync(async (req, res) => {
-  const { driverId, fromLocationId, trailer, truck, toLocationIds } = req.body;
+  const { date, driverId, fromLocationId, trailer, truck, toLocationIds } = req.body;
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!fromLocationId || !truckId || !driverId || !toLocationIds || toLocationIds.length === 0) {
+  if (!date || !fromLocationId || !truckId || !driverId || !toLocationIds || toLocationIds.length === 0) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
-    });
-  }
-
-  const date = new Date();
-
-  const dailyDelivery = await DailyDeliveries.findOne({ where: { date, truck_id: truckId } });
-  if (!dailyDelivery) {
-    return res.status(400).send({
-      success: false,
-      message: 'Truck is not listed for delivery',
     });
   }
 
@@ -261,6 +255,7 @@ const createDelivery = catchAsync(async (req, res) => {
   }
 
   const delivery = await Deliveries.create({
+    date,
     truck_id: truckId,
     driver_id: driverId,
     trailer_id: trailer ? trailer.id : null,
@@ -306,11 +301,11 @@ const createDelivery = catchAsync(async (req, res) => {
 const editDelivery = catchAsync(async (req, res) => {
   const { id: deliveryId } = req.params;
 
-  const { driverId, truck, trailer, fromLocationId, toLocationIds } = req.body;
+  const { date, driverId, truck, trailer, fromLocationId, toLocationIds } = req.body;
 
   const { id: truckId, fuelDetails } = truck || {};
 
-  if (!driverId || !truckId || !fromLocationId || !toLocationIds || toLocationIds.length === 0) {
+  if (!date || !driverId || !truckId || !fromLocationId || !toLocationIds || toLocationIds.length === 0) {
     return res.status(400).send({
       success: false,
       message: 'Missing required fields',
@@ -353,12 +348,13 @@ const editDelivery = catchAsync(async (req, res) => {
     });
   }
 
+  delivery.date = date;
   delivery.truck_id = truckId;
   delivery.driver_id = driverId;
   delivery.trailer_id = trailer ? trailer.id : null;
   delivery.from_location_id = fromLocationId;
 
-  await delivery.save({ fields: ['driver_id', 'trailer_id', 'from_location_id'] });
+  await delivery.save({ fields: ['date', 'truck_id', 'driver_id', 'trailer_id', 'from_location_id'] });
 
   await DeliveryDetails.destroy({ where: { delivery_id: deliveryId } });
 
