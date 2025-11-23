@@ -28,35 +28,41 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     });
   }
 
-  const deliveriesResult = await DailyDeliveries.findAll({
-    where: { date },
+  const trucksResult = await Trucks.findAll({
     include: [
       {
-        model: Trucks,
-        as: 'truck',
-        include: [
-          {
-            model: TruckStatus,
-            as: 'status',
-          },
-          {
-            model: Trailers,
-            as: 'trailer',
-          },
-          {
-            model: Drivers,
-            as: 'driver',
-          },
-        ],
+        model: TruckStatus,
+        as: 'status',
+        where: { id: 1 },
       },
       {
-        model: LeaveStatus,
-        as: 'leaveStatus',
+        model: Trailers,
+        as: 'trailer',
+      },
+      {
+        model: Drivers,
+        as: 'driver',
+      },
+      {
+        model: DailyDeliveries,
+        as: 'dailyDeliveries',
+        where: { date },
+        required: false,
+        include: [
+          {
+            model: LeaveStatus,
+            as: 'leaveStatus',
+          },
+        ],
       },
       {
         model: Deliveries,
         as: 'deliveries',
         include: [
+          {
+            model: DeliveryLocations,
+            as: 'deliveryLocations',
+          },
           {
             model: DeliveryDetails,
             as: 'deliveryDetails',
@@ -101,22 +107,23 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     ],
   });
 
-  const deliveries = deliveriesResult.map((dt) => dt.get({ plain: true }));
+  const trucks = trucksResult.map((dt) => dt.get({ plain: true }));
 
-  const result = deliveries.map((delivery) => ({
-    daily_delivery_id: delivery.id,
+  const result = trucks.map((truck) => ({
     truck: {
-      id: delivery.truck.id,
-      license_plate: delivery.truck.license_plate,
-      status: delivery.truck?.status?.name,
-      status_id: delivery.truck?.status_id,
+      id: truck.id,
+      license_plate: truck.license_plate,
+      status: truck?.status?.name,
+      status_id: truck?.status_id,
     },
-    trailer: delivery.truck?.trailer,
-    driver: delivery.truck?.driver,
-    leave_status: delivery.leaveStatus.name,
-    leave_status_id: delivery.leave_status_id,
-    delivery_count: delivery.deliveries?.length ?? 0,
-    deliveries: delivery.deliveries?.map((del) => ({
+
+    trailer: truck?.trailer,
+    driver: truck?.driver,
+
+    leave_status: truck.dailyDeliveries?.[0]?.leaveStatus?.name ?? 'Хугацаа тодорхойгүй',
+    leave_status_id: truck.dailyDeliveries?.[0]?.leave_status_id ?? 13,
+
+    deliveries: truck.deliveries?.map((del) => ({
       id: del.id,
       date: del.date,
 
@@ -128,8 +135,10 @@ const getDateDeliveries = catchAsync(async (req, res) => {
 
       from_location: del.fromLocation,
 
-      location_details: del.deliveryDetails
-        ?.map((dd) => ({
+      location_details: del.deliveryLocations?.map((dl) => {
+        const dd = del.deliveryDetails.find((detail) => detail.receiver?.location_id === dl.location_id) ?? {};
+
+        return {
           inspector_status: dd.inspectorStatus?.name,
           inspector_status_id: dd.inspector_status_id,
           received_at: dd.received_at,
@@ -142,10 +151,8 @@ const getDateDeliveries = catchAsync(async (req, res) => {
             id: dd.receiver?.location?.id,
             name: dd.receiver?.location?.name,
           },
-        }))
-        .filter(
-          (locationDetail, index, self) => index === self.findIndex((l) => l.location?.id === locationDetail.location?.id)
-        ),
+        };
+      }),
     })),
   }));
 
@@ -155,7 +162,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
     const otherTrucks = await Trucks.findAll({
       where: {
         id: {
-          [db.Sequelize.Op.notIn]: deliveries.map((d) => d.truck.id),
+          [db.Sequelize.Op.notIn]: trucks.map((t) => t.id),
         },
       },
       include: [
@@ -253,9 +260,9 @@ const createDelivery = catchAsync(async (req, res) => {
   }
 
   const delivery = await Deliveries.create({
+    truck_id: truckId,
     driver_id: driverId,
     trailer_id: trailer ? trailer.id : null,
-    daily_delivery_id: dailyDelivery.id,
     from_location_id: fromLocationId,
   });
 
@@ -345,9 +352,11 @@ const editDelivery = catchAsync(async (req, res) => {
     });
   }
 
+  delivery.truck_id = truckId;
   delivery.driver_id = driverId;
   delivery.trailer_id = trailer ? trailer.id : null;
   delivery.from_location_id = fromLocationId;
+
   await delivery.save({ fields: ['driver_id', 'trailer_id', 'from_location_id'] });
 
   await DeliveryDetails.destroy({ where: { delivery_id: deliveryId } });
@@ -542,7 +551,6 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
 
   const result = {
     id: delivery.id,
-    daily_delivery_id: delivery.daily_delivery_id,
     driver_id: delivery.driver_id,
     trailer_id: delivery.trailer_id,
     from_location_id: delivery.from_location_id,

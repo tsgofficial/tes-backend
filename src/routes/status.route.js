@@ -17,9 +17,9 @@ router.get('/leave', getLeaveStatuses);
 router.get('/manager', getManagerStatuses);
 router.get('/inspector', getInspectorStatuses);
 
+router.put('/leave', putLeaveStatus);
 router.put('/truck/:truckId', putTruckStatus);
 router.put('/manager/:deliveryId', putManagerStatus);
-router.put('/leave/:dailyDeliveryId', putLeaveStatus);
 router.put('/inspector/:deliveryDetailId', putInspectorStatus);
 
 module.exports = router;

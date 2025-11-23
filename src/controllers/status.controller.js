@@ -118,26 +118,27 @@ const putManagerStatus = catchAsync(async (req, res) => {
 });
 
 const putLeaveStatus = catchAsync(async (req, res) => {
-  const { dailyDeliveryId } = req.params;
-  const { statusId } = req.body;
+  const { truckId, date, statusId } = req.body;
 
-  if (!dailyDeliveryId || !statusId) {
+  if (!date || !truckId || !statusId) {
     return res.status(400).send({
       success: false,
       message: 'leaveId and statusId are required',
     });
   }
 
-  const dailyDelivery = await DailyDeliveries.findByPk(dailyDeliveryId);
-  if (!dailyDelivery) {
-    return res.status(404).send({
-      success: false,
-      message: 'Daily delivery not found',
-    });
-  }
+  await DailyDeliveries.destroy({
+    where: {
+      truck_id: truckId,
+      date,
+    },
+  });
 
-  dailyDelivery.leave_status_id = statusId;
-  await dailyDelivery.save();
+  const dailyDelivery = await DailyDeliveries.create({
+    truck_id: truckId,
+    date,
+    leave_status_id: statusId,
+  });
 
   res.send({
     success: true,

@@ -225,4 +225,14 @@ const postDailyTrucks = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { fetchTrucks, createTruck, editTruck, deleteTruck, postDailyTrucks };
+const getReadyTrucks = catchAsync(async (req, res) => {
+  const readyTrucks = await getTrucks({ statusId: 1 });
+
+  res.send({
+    success: true,
+    message: 'Fetched ready trucks successfully',
+    data: readyTrucks,
+  });
+});
+
+module.exports = { fetchTrucks, createTruck, editTruck, deleteTruck, postDailyTrucks, getReadyTrucks };

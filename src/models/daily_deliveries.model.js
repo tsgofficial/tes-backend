@@ -41,10 +41,6 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'truck_id',
       as: 'truck',
     });
-    DailyDeliveries.hasMany(models.deliveries, {
-      foreignKey: 'daily_delivery_id',
-      as: 'deliveries',
-    });
     DailyDeliveries.belongsTo(models.leave_status, {
       foreignKey: 'leave_status_id',
       as: 'leaveStatus',

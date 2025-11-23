@@ -2,7 +2,7 @@ const db = require('../../models');
 
 const { trucks: Trucks, drivers: Drivers, trailers: Trailers, containers: Containers, truck_status: TruckStatus } = db;
 
-async function getTrucks({ truckIds = [] } = {}) {
+async function getTrucks({ statusId, truckIds = [] } = {}) {
   const trucksResult = await Trucks.findAll({
     where: truckIds.length > 0 ? { id: { [db.Sequelize.Op.in]: truckIds } } : {},
     include: [
@@ -29,6 +29,7 @@ async function getTrucks({ truckIds = [] } = {}) {
       {
         model: TruckStatus,
         as: 'status',
+        where: statusId ? { id: statusId } : {},
       },
     ],
     order: [['id', 'DESC']],

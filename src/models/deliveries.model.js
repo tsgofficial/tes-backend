@@ -8,7 +8,7 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
         primaryKey: true,
       },
-      daily_delivery_id: {
+      truck_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -50,6 +50,10 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Deliveries.associate = (models) => {
+    Deliveries.belongsTo(models.trucks, {
+      foreignKey: 'truck_id',
+      as: 'truck',
+    });
     Deliveries.belongsTo(models.drivers, {
       foreignKey: 'driver_id',
       as: 'driver',
@@ -69,10 +73,6 @@ module.exports = function (sequelize, DataTypes) {
     Deliveries.belongsTo(models.fuel_locations, {
       foreignKey: 'from_location_id',
       as: 'fromLocation',
-    });
-    Deliveries.belongsTo(models.daily_deliveries, {
-      foreignKey: 'daily_delivery_id',
-      as: 'dailyDelivery',
     });
     Deliveries.belongsTo(models.manager_status, {
       foreignKey: 'manager_status_id',

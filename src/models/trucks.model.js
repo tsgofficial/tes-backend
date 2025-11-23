@@ -54,6 +54,10 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'truck_id',
       as: 'containers',
     });
+    Trucks.hasMany(models.deliveries, {
+      foreignKey: 'truck_id',
+      as: 'deliveries',
+    });
     Trucks.hasMany(models.delivery_details, {
       foreignKey: 'truck_id',
       as: 'deliveryDetails',
