@@ -558,32 +558,38 @@ const getDeliveryDetails = catchAsync(async (req, res) => {
     received_by: delivery.received_by,
     received_datetime: delivery.received_datetime,
     delivery_locations: delivery.deliveryLocations.map((loc) => loc.location_id),
-    truck_details: delivery.deliveryDetails
-      .filter((detail) => detail.truck_id)
-      .map((detail) => ({
-        id: detail.id,
-        truck_id: detail.truck_id,
-        fuel_type: detail.fuelType,
-        container: detail.container,
-        density: detail.density,
-        inspector_status: detail.inspectorStatus,
-        inspector_status_id: detail.inspector_status_id,
-        received_at: detail.received_at,
-        receiver: detail.receiver,
-      })),
-    trailer_details: delivery.deliveryDetails
-      .filter((detail) => detail.trailer_id)
-      .map((detail) => ({
-        id: detail.id,
-        trailer_id: detail.trailer_id,
-        fuel_type: detail.fuelType,
-        container: detail.container,
-        density: detail.density,
-        inspector_status: detail.inspectorStatus,
-        inspector_status_id: detail.inspector_status_id,
-        received_at: detail.received_at,
-        receiver: detail.receiver,
-      })),
+    truck: {
+      id: delivery.truck_id,
+      details: delivery.deliveryDetails
+        .filter((detail) => detail.truck_id)
+        .map((detail) => ({
+          id: detail.id,
+          fuel_type: detail.fuelType,
+          container: detail.container,
+          density: detail.density,
+          inspector_status: detail.inspectorStatus,
+          inspector_status_id: detail.inspector_status_id,
+          received_at: detail.received_at,
+          receiver: detail.receiver,
+        })),
+    },
+    trailer: delivery.trailer_id
+      ? {
+          id: delivery.trailer_id,
+          details: delivery.deliveryDetails
+            .filter((detail) => detail.trailer_id)
+            .map((detail) => ({
+              id: detail.id,
+              fuel_type: detail.fuelType,
+              container: detail.container,
+              density: detail.density,
+              inspector_status: detail.inspectorStatus,
+              inspector_status_id: detail.inspector_status_id,
+              received_at: detail.received_at,
+              receiver: detail.receiver,
+            })),
+        }
+      : null,
   };
 
   res.send({
