@@ -5,12 +5,12 @@ const FuelLocations = db.fuel_locations;
 const FuelLocationDistances = db.fuel_location_distances;
 
 const getFuelLocationDistances = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const { location_id } = req.user;
 
   let where = {};
-  if (id) {
+  if (location_id) {
     where = {
-      [db.Sequelize.Op.or]: [{ location_id_1: id }, { location_id_2: id }],
+      [db.Sequelize.Op.or]: [{ location_id_1: location_id }, { location_id_2: location_id }],
     };
   }
   const fuelLocationDistances = await FuelLocationDistances.findAll({
