@@ -49,6 +49,7 @@ const getDateDeliveries = catchAsync(async (req, res) => {
         model: DailyDeliveries,
         as: 'dailyDeliveries',
         where: { date },
+        required: false,
         include: [
           {
             model: LeaveStatus,
