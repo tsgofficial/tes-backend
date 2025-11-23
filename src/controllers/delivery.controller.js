@@ -145,8 +145,8 @@ const getDateDeliveries = catchAsync(async (req, res) => {
         const dd = del.deliveryDetails.find((detail) => detail.receiver?.location_id === dl.location_id) ?? {};
 
         return {
-          inspector_status: dd.inspectorStatus?.name,
-          inspector_status_id: dd.inspector_status_id,
+          inspector_status: dd.inspectorStatus?.name ?? 'Хүлээгдэж байна',
+          inspector_status_id: dd.inspector_status_id ?? 1,
           received_at: dd.received_at,
           receiver: {
             id: dd.receiver?.id,
