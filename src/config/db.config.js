@@ -1,9 +1,9 @@
 module.exports = {
-  HOST: process.env.MYSQL_HOST || 'localhost',
-  PORT: process.env.MYSQL_PORT || 3307,
-  USER: process.env.MYSQL_USER || 'root',
-  PASSWORD: process.env.MYSQL_PASSWORD || 'secret',
-  DB: process.env.MYSQL_DB || 'tes',
+  HOST: 'localhost',
+  PORT: 3306,
+  USER: 'tmoiltr1_tes',
+  PASSWORD: 'tmoiltrans123456',
+  DB: 'tmoiltr1_tes',
   dialect: 'mysql',
   pool: {
     max: 5,
