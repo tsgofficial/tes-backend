@@ -1,9 +1,9 @@
-const dotenv = require('dotenv');
-const path = require('path');
+// const dotenv = require('dotenv');
+// const path = require('path');
 // const Joi = require('joi');
 // const logger = require('./logger');
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // const envVarsSchema = Joi.object()
 //   .keys({
