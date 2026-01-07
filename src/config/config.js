@@ -39,7 +39,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const config = {
   env: 'production',
-  port: '3000',
+  port: 3000,
   mysql: {
     host: 'localhost',
     port: 3306,
