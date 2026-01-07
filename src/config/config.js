@@ -44,7 +44,7 @@ const config = {
     host: 'localhost',
     port: '3306',
     database: 'tmoiltr1_tes',
-    username: 'tes',
+    username: 'tmoiltr1_tes',
     password: 'tmoiltrans123456',
     dialect: 'mysql',
     // logging: envVars.NODE_ENV === 'development' ? (msg) => logger.info(msg) : false,
