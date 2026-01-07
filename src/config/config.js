@@ -38,14 +38,14 @@ if (error) {
 }
 
 const config = {
-  env: envVars.NODE_ENV,
-  port: envVars.PORT,
+  env: 'production',
+  port: '3000',
   mysql: {
-    host: envVars.MYSQL_HOST,
-    port: envVars.MYSQL_PORT,
-    database: envVars.MYSQL_DB,
-    username: envVars.MYSQL_USER,
-    password: envVars.MYSQL_PASSWORD,
+    host: 'localhost',
+    port: '3306',
+    database: 'tmoiltr1_tes',
+    username: 'tes',
+    password: 'tmoiltrans123456',
     dialect: 'mysql',
     // logging: envVars.NODE_ENV === 'development' ? (msg) => logger.info(msg) : false,
     logging: false,
