@@ -38,8 +38,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 // }
 
 const config = {
-  env: 'production',
-  port: 3000,
+  env: process.env.ENV,
+  port: process.env.PORT,
   jwt: {
     secret: process.env.JWT_SECRET,
     accessExpirationMinutes: process.env.JWT_ACCESS_EXPIRATION_MINUTES,
