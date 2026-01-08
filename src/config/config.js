@@ -1,9 +1,9 @@
-// const dotenv = require('dotenv');
-// const path = require('path');
+const dotenv = require('dotenv');
+const path = require('path');
 // const Joi = require('joi');
 // const logger = require('./logger');
 
-// dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // const envVarsSchema = Joi.object()
 //   .keys({
@@ -40,22 +40,12 @@
 const config = {
   env: 'production',
   port: 3000,
-  mysql: {
-    host: 'localhost',
-    port: 3306,
-    database: 'tmoiltr1_tes',
-    username: 'tmoiltr1_tes',
-    password: 'tmoiltrans123456',
-    dialect: 'mysql',
-    // logging: envVars.NODE_ENV === 'development' ? (msg) => logger.info(msg) : false,
-    logging: false,
-  },
   jwt: {
-    secret: '4669a8beb52933edc5d69825f68b5eaf1fc141c889894800d45b1aaa3ee36760',
-    accessExpirationMinutes: 30,
-    refreshExpirationDays: 30,
-    resetPasswordExpirationMinutes: 10,
-    verifyEmailExpirationMinutes: 10,
+    secret: process.env.JWT_SECRET,
+    accessExpirationMinutes: process.env.JWT_ACCESS_EXPIRATION_MINUTES,
+    refreshExpirationDays: process.env.JWT_REFRESH_EXPIRATION_DAYS,
+    resetPasswordExpirationMinutes: process.env.JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
+    verifyEmailExpirationMinutes: process.env.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES,
   },
 };
 module.exports = config;
