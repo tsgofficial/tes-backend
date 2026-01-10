@@ -41,9 +41,23 @@ app.use(fileUpload());
 
 // enable cors
 const corsOptions = {
-  origin: '*',
-  allowedHeaders: ['*'],
-};
+  origin: true, // reflect request origin
+  credentials: true, // allow cookies, auth headers
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'X-Session',
+    'X-Device',
+    'X-Lang'
+  ],
+  exposedHeaders: [
+    'Authorization'
+  ]
+}
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
