@@ -23,7 +23,12 @@ if (config.env !== 'test') {
 }
 
 // set security HTTP headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  })
+);
 
 // parse json request body
 app.use(express.json({ limit: '50mb' }));
@@ -43,7 +48,7 @@ app.use(fileUpload());
 const corsOptions = {
   origin: true, // reflect request origin
   credentials: true, // allow cookies, auth headers
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
     'Authorization',
@@ -52,12 +57,10 @@ const corsOptions = {
     'Origin',
     'X-Session',
     'X-Device',
-    'X-Lang'
+    'X-Lang',
   ],
-  exposedHeaders: [
-    'Authorization'
-  ]
-}
+  exposedHeaders: ['Authorization'],
+};
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
