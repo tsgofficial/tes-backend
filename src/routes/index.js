@@ -1,5 +1,6 @@
 const express = require('express');
 
+const home = require('./home.route');
 const auth = require('./auth.route');
 const users = require('./users.route');
 const trucks = require('./truck.route');
@@ -63,6 +64,10 @@ const adminRoutes = [
   {
     path: '/statuses',
     route: statuses,
+  },
+  {
+    path: '/home',
+    route: home,
   },
 ];
 
