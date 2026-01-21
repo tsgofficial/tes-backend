@@ -12,6 +12,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING(255),
         allowNull: true,
       },
+      user_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: true,
+      },
     },
     {
       sequelize,
@@ -29,6 +33,7 @@ module.exports = function (sequelize, DataTypes) {
   );
   Warehouses.associate = function (models) {
     Warehouses.hasMany(models.warehouse_containers, { foreignKey: 'warehouse_id', as: 'containers' });
+    Warehouses.belongsTo(models.users, { foreignKey: 'user_id', as: 'user' });
   };
 
   return Warehouses;

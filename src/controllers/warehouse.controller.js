@@ -1,19 +1,15 @@
 const db = require('../models');
 
-const Users = db.users;
 const Warehouses = db.warehouses;
 const WarehouseContainers = db.warehouse_containers;
 
 const getWarehouseDetails = async (req, res) => {
   const { id } = req.user;
-  let { warehouse_id } = req.user;
 
-  if (!warehouse_id) {
-    const user = await Users.findByPk(id);
-    warehouse_id = user.warehouse_id;
-  }
-
-  const warehouse = await Warehouses.findByPk(warehouse_id, {
+  const warehouse = await Warehouses.findOne({
+    where: {
+      user_id: id,
+    },
     include: [
       {
         model: WarehouseContainers,
@@ -37,23 +33,14 @@ const getWarehouseDetails = async (req, res) => {
 
 const updateWarehouse = async (req, res) => {
   const { id } = req.user;
-  let { warehouse_id } = req.user;
-
-  if (!warehouse_id) {
-    const user = await Users.findByPk(id);
-    warehouse_id = user.warehouse_id;
-  }
-
-  if (!warehouse_id) {
-    return res.status(400).send({
-      success: false,
-      message: 'warehouse_id is required',
-    });
-  }
 
   const { name, containers } = req.body;
 
-  const warehouse = await Warehouses.findByPk(warehouse_id);
+  const warehouse = await Warehouses.findOne({
+    where: {
+      user_id: id,
+    },
+  });
   if (!warehouse) {
     return res.status(404).send({
       success: false,
@@ -61,8 +48,7 @@ const updateWarehouse = async (req, res) => {
     });
   }
 
-  warehouse.name = name || warehouse.name;
-  await warehouse.save();
+  await Warehouses.update({ name }, { where: { id: warehouse.id } });
 
   for (const container of containers) {
     if (container.id) {
@@ -90,11 +76,20 @@ const createWarehouse = async (req, res) => {
   const { id } = req.user;
   const { name, containers } = req.body;
 
-  const user = await Users.findByPk(id);
-  const warehouse = await Warehouses.create({ name });
+  const existingWarehouse = await Warehouses.findOne({
+    where: {
+      user_id: id,
+    },
+  });
 
-  user.warehouse_id = warehouse.id;
-  await user.save();
+  if (existingWarehouse) {
+    return res.status(400).send({
+      success: false,
+      message: 'Warehouse already exists for this user',
+    });
+  }
+
+  const warehouse = await Warehouses.create({ name, user_id: id });
 
   await WarehouseContainers.bulkCreate(
     containers.map((container) => ({

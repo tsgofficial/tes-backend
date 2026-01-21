@@ -14,6 +14,7 @@ const fuelLocationDistances = require('./fuel_location_distance.route');
 const statuses = require('./status.route');
 const report = require('./report.route');
 const warehouse = require('./warehouse.route');
+const order = require('./order.route');
 
 const router = express.Router();
 
@@ -72,6 +73,10 @@ const adminRoutes = [
   {
     path: '/warehouse',
     route: warehouse,
+  },
+  {
+    path: '/orders',
+    route: order,
   },
 ];
 

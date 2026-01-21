@@ -8,14 +8,14 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
         primaryKey: true,
       },
-      warehouse_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
       status: {
         type: DataTypes.ENUM('ordered', 'shipped', 'coming', 'came'),
         allowNull: true,
         defaultValue: 'ordered',
+      },
+      user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
     },
     {
@@ -38,6 +38,7 @@ module.exports = function (sequelize, DataTypes) {
       foreignKey: 'order_id',
       as: 'details',
     });
+    Orders.belongsTo(models.users, { foreignKey: 'user_id', as: 'user' });
   };
 
   return Orders;
