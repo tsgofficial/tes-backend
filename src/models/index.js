@@ -35,6 +35,10 @@ db.manager_status = require('./manager_status.model')(sequelize, Sequelize);
 db.truck_status = require('./truck_status.model')(sequelize, Sequelize);
 db.inspector_status = require('./inspector_status.model')(sequelize, Sequelize);
 db.delivery_locations = require('./delivery_locations.model')(sequelize, Sequelize);
+db.orders = require('./orders.model')(sequelize, Sequelize);
+db.order_details = require('./order_details.model')(sequelize, Sequelize);
+db.warehouses = require('./warehouses.model')(sequelize, Sequelize);
+db.warehouse_containers = require('./warehouse_containers.model')(sequelize, Sequelize);
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {

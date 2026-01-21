@@ -1,5 +1,6 @@
 const express = require('express');
 
+const { protect } = require('../middlewares/auth');
 const home = require('./home.route');
 const auth = require('./auth.route');
 const users = require('./users.route');
@@ -11,9 +12,8 @@ const fuelTypes = require('./fuel_type.route');
 const fuelLocations = require('./fuel_location.route');
 const fuelLocationDistances = require('./fuel_location_distance.route');
 const statuses = require('./status.route');
-
 const report = require('./report.route');
-const { protect } = require('../middlewares/auth');
+const warehouse = require('./warehouse.route');
 
 const router = express.Router();
 
@@ -68,6 +68,10 @@ const adminRoutes = [
   {
     path: '/home',
     route: home,
+  },
+  {
+    path: '/warehouse',
+    route: warehouse,
   },
 ];
 

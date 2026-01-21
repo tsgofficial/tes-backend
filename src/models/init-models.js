@@ -1,12 +1,12 @@
 var DataTypes = require("sequelize").DataTypes;
-var _delivery_locations = require("./delivery_locations");
+var _warehouse_containers = require("./warehouse_containers");
 
 function initModels(sequelize) {
-  var delivery_locations = _delivery_locations(sequelize, DataTypes);
+  var warehouse_containers = _warehouse_containers(sequelize, DataTypes);
 
 
   return {
-    delivery_locations,
+    warehouse_containers,
   };
 }
 module.exports = initModels;
